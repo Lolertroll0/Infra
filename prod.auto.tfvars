@@ -7,6 +7,7 @@ urls = {
 # Global Vars
 global = {
   adminUser = "" #TODO: add admin user (Setup GH secrets)
+  adminEmail = "" #TODO: add admin email (Setup GH secrets) 
 }
 
 # Tailscale vars

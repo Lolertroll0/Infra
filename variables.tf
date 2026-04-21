@@ -1,6 +1,7 @@
 variable "global" {
 	type = object({
 		adminUser = string
+		adminEmail = string
 	})
 	description = "Global variables"
 	sensitive = true

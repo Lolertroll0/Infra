@@ -7,7 +7,7 @@ resource "docker_network" "orchestratorInternal" {
 resource "docker_container" "uptimeKuma" {
   provider = docker.orchestrator
   name = "uptimeKuma"
-  image = "louislam/uptime-kuma:2"
+  image = docker_image.uptimeKuma.name
   restart = "unless-stopped"
 
   networks_advanced {
@@ -32,7 +32,7 @@ resource "docker_container" "uptimeKuma" {
 resource "docker_container" "caddyProxy" {
   provider = docker.orchestrator
   name = "caddyProxy"
-  image = "caddy:alpine"
+  image = docker_image.caddyProxy.name
   restart = "unless-stopped"
 
   networks_advanced {
@@ -62,7 +62,7 @@ resource "docker_container" "caddyProxy" {
 resource "docker_container" "vaultWarden" {
   provider = docker.orchestrator
   name = "vaultwarden"
-  image = "dhi.io/vaultwarden:latest"
+  image = docker_image.vaultWarden.name
   restart = "unless-stopped"
 
   networks_advanced {

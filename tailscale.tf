@@ -2,7 +2,7 @@
 resource "tailscale_tailnet_key" "infraKeyServer" {
   reusable = true
   description = "Auth keys for server nodes"
-  tags = ["tag:server"]
+  tags = ["tag:automation"]
   preauthorized = true
   ephemeral = false
 }
@@ -14,6 +14,16 @@ resource "tailscale_tailnet_key" "infraKeyOrchestrator" {
   preauthorized = true
   ephemeral = false
 }
+
+resource "tailscale_tailnet_key" "infraKeyVoicePipeline" {
+  reusable = true
+  description = "Auth keys for voice nodes"
+  tags = ["tag:voice"]
+  preauthorized = true
+  ephemeral = false
+}
+
+# TODO: add tags for consumer nodes
 
 # Output Tailscale auth keys
 output "TailscaleAuthKeyForServer" {
