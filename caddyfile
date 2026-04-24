@@ -1,11 +1,24 @@
-# Tailscale external access (auto HTTPS) 
-ai.mainServer.tailded50c.ts.net { reverse_proxy mainServer:8123 }
-
-# upTime Kuma dashboard
+# Monitoring (Uptime Kuma)
 monitor.rp4.tailded50c.ts.net { reverse_proxy localhost:3001 }
 
-# Vaultwarden
+# Password manager (Vaultwarden)
 vaultwarden.rp4.tailded50c.ts.net { reverse_proxy localhost:80 }
 
-# Home Assistant
+# Home Assistant routing
 homeassistant.mainServer.tailded50c.ts.net { reverse_proxy mainServer.tailded50c.ts.net:8123 }
+
+# ezBookKeeping routing
+ezbk.mainServer.tailded50c.ts.net { reverse_proxy mainServer.tailded50c.ts.net:8096 }
+
+# Ollama routing
+ollamaAPI.voice.tailded50c.ts.net { reverse_proxy voice.tailded50c.ts.net:11434 }
+ollamaUI.voice.tailded50c.ts.net { reverse_proxy voice.tailded50c.ts.net:8080 }
+
+# Whisper (STT) - Piper (TTS) routing
+whisper.voice.tailded50c.ts.net { reverse_proxy voice.tailded50c.ts.net:10300 }
+piper.voice.tailded50c.ts.net { reverse_proxy voice.tailded50c.ts.net:10200 }
+
+# SSH routing
+ssh.rp4.tailded50c.ts.net { reverse_proxy rp4.tailded50c.ts.net:22 }
+ssh.voice.tailded50c.ts.net { reverse_proxy voice.tailded50c.ts.net:22 }
+ssh.mainServer.tailded50c.ts.net { reverse_proxy mainServer.tailded50c.ts.net:22 }

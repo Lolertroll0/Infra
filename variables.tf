@@ -39,6 +39,7 @@ variable "proxmox" {
 		proxmoxAPI = string
 		proxmoxTokenId = string
 		haosTemplate = string
+		ezbkTemplate = string
 	})
 	sensitive = true
 	description = "The secret for the Proxmox API - Used to spin up VMs"

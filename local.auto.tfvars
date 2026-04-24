@@ -20,4 +20,5 @@ proxmox = {
   proxmoxAPI = "" # TODO: Add proxmox API (Setup GH secrets)
   proxmoxTokenId = "" # TODO: Add proxmox token ID (Setup GH secrets)
   haosTemplate = "" # TODO: Add HAOS template name
+  ezbkTemplate = "" # TODO: Add ezBookKeeping template name
 }  
