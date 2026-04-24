@@ -1,7 +1,7 @@
 urls = {
-  mainServer   = "" # TODO: add tailscale magic dns name
-  orchestrator = "" # TODO: add tailscale magic dns name
-  voicePipeline = "" # TODO: add tailscale magic dns name
+  mainServer   = "https://mainServer.${tailscale.tailnet}" 
+  orchestrator = "https://rp4.${tailscale.tailnet}" 
+  voicePipeline = "https://voice.${tailscale.tailnet}" 
 }
 
 # Global Vars
@@ -13,7 +13,7 @@ global = {
 # Tailscale vars
 tailscale = {
   tailscaleAPIKey = "" # TODO: Add tailscale API Key (Setup GH secrets)
-  tailnet = "" # TODO: Add tailnet (Setup GH secrets)
+  tailnet = "tailded50c.ts.net" 
 }
 
 proxmox = {
@@ -23,3 +23,9 @@ proxmox = {
   haosTemplate = "" # TODO: Add HAOS template name
   ezbkTemplate = "" # TODO: Add ezBookKeeping template name
 }  
+
+ssh = {
+  mainKey = "" # TODO: Add main location ssh key 
+  rp4Key = "" # TODO: Add rp4 location ssh key 
+  voiceKey = "" # TODO: Add voice location ssh key 
+}

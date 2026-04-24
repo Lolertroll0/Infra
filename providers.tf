@@ -18,15 +18,19 @@ terraform {
 provider "docker" {
   alias = "mainServer"
   host = "ssh://${var.global.adminUser}@${var.urls.mainServer}:22"
+  ssh_opts = ["-i ${var.ssh.mainKey}"]
 }
 provider "docker" {
   alias = "orchestrator"
   host = "ssh://${var.global.adminUser}@${var.urls.orchestrator}:22"
+  ssh_opts = ["-i ${var.ssh.rp4Key}"]
 }
 provider "docker" {
   alias = "voicePipeline"
   host = "ssh://${var.global.adminUser}@${var.urls.voicePipeline}:22"
+  ssh_opts = ["-i ${var.ssh.voiceKey}"]
 }
+
 provider "proxmox" {
   pm_api_url          = "${var.proxmox.proxmoxAPI}"
   pm_api_token_id     = "${var.proxmox.proxmoxTokenId}"

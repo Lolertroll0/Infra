@@ -15,12 +15,11 @@ variable "urls" {
 		voicePipeline = string
 	})
 }
-variable "LocalIP" {
-	description = "List of IPs to inital configs on"
+variable "ssh" {
 	type = object({
-		mainServer = string
-		orchestrator = string
-		voicePipeline = string
+		mainKey = string 
+		rp4Key = string
+		voiceKey = string
 	})
 }
 variable "tailscale" {

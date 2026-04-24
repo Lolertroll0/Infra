@@ -1,4 +1,3 @@
-
 #Orchestrator Resources
 resource "docker_image" "uptimeKuma" {
   provider = docker.orchestrator
