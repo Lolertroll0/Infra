@@ -23,15 +23,13 @@ resource "tailscale_tailnet_key" "infraKeyVoicePipeline" {
   ephemeral = false
 }
 
-# TODO: add tags for consumer nodes
-
 # Output Tailscale auth keys
 output "TailscaleAuthKeyForServer" {
   value = tailscale_tailnet_key.infraKeyServer.key
   sensitive = true
   description = "Assign autorized Authkey to server nodes and tag them as tag:server"
 }
-  output "TailscaleAuthKeyForOrchestrator" {
+output "TailscaleAuthKeyForOrchestrator" {
   value = tailscale_tailnet_key.infraKeyOrchestrator.key
   sensitive = true
   description = "Assign autorized Authkey to orchestrator nodes and tag them as tag:orchestrator"

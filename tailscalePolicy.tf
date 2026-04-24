@@ -1,5 +1,12 @@
 resource "tailscale_acl" "home_mesh_policy" {
   acl = jsonencode({
+    
+    nodeAttrs = [
+      {
+        "target": ["tag:orchestrator", "tag:mainServer"],
+        "attr": ["dns-subdomain-resolve"]
+      }
+    ],
 
     groups = {
       "group:admin" = ["${var.global.adminEmail}"],
@@ -7,30 +14,38 @@ resource "tailscale_acl" "home_mesh_policy" {
 
     tagOwners = {
       "tag:orchestrator" = ["group:admin"],
-      "tag:automation"   = ["group:admin"],
+      "tag:mainServer"   = ["group:admin"],
       "tag:voice"        = ["group:admin"],
-      # TODO: add consumer tags
+      "tag:consumer"     = ["group:admin"],
     },
 
     acls = [
 
-      # TODO: add ACLs for consumers
+      { 
+        action = "accept" 
+        src = ["tag:consumer"] 
+        dst = ["tag:orchestrator:*"] 
+      },
+        
+      {
+        action = "accept",
+        src    = ["tag:consumer"],
+        dst    = ["tag:orchestrator:*"],
+      },
 
       {
         action = "accept",
         src    = ["tag:orchestrator"],
         dst    = [
-          "tag:automation:8123", 
+          "tag:mainServer:8123", 
           "tag:voice:11434", # Ollama API
-          "tag:voice:10300", # Piper
-          "tag:voice:10200", # Whisper
           "tag:voice:8080"   # Ollama WebUI
         ],
       },
 
       {
         action = "accept",
-        src    = ["tag:automation"],
+        src    = ["tag:mainServer"],
         dst    = [
           "tag:voice:10300", # Piper
           "tag:voice:10200", # Whisper
@@ -51,7 +66,7 @@ resource "tailscale_acl" "home_mesh_policy" {
         src    = ["group:admin"],
         dst    = [
           "tag:orchestrator", 
-          "tag:automation", 
+          "tag:mainServer", 
           "tag:voice"
         ],
         users  = ["root", "${var.global.adminUser}", "admin"],

@@ -1,0 +1,11 @@
+# Tailscale external access (auto HTTPS) 
+ai.mainServer.tailded50c.ts.net { reverse_proxy mainServer:8123 }
+
+# upTime Kuma dashboard
+monitor.rp4.tailded50c.ts.net { reverse_proxy localhost:3001 }
+
+# Vaultwarden
+vaultwarden.rp4.tailded50c.ts.net { reverse_proxy localhost:80 }
+
+# Home Assistant
+homeassistant.mainServer.tailded50c.ts.net { reverse_proxy mainServer.tailded50c.ts.net:8123 }
