@@ -1,24 +1,24 @@
 # Monitoring (Uptime Kuma)
-monitor.rp4.tailded50c.ts.net { reverse_proxy localhost:3001 }
+monitor.rp4.${} { reverse_proxy localhost:3001 } # TODO: add tailscale server from GH Secrets
 
 # Password manager (Vaultwarden)
-vaultwarden.rp4.tailded50c.ts.net { reverse_proxy localhost:80 }
+vaultwarden.rp4.${} { reverse_proxy localhost:80 } # TODO: add tailscale server from GH Secrets
 
 # Home Assistant routing
-homeassistant.mainServer.tailded50c.ts.net { reverse_proxy mainServer.tailded50c.ts.net:8123 }
+homeassistant.mainServer.${} { reverse_proxy mainServer.${}:8123 } # TODO: add tailscale server from GH Secrets
 
 # ezBookKeeping routing
-ezbk.mainServer.tailded50c.ts.net { reverse_proxy mainServer.tailded50c.ts.net:8096 }
+ezbk.mainServer.${} { reverse_proxy mainServer.${}:8096 } # TODO: add tailscale server from GH Secrets
 
 # Ollama routing
-ollamaAPI.voice.tailded50c.ts.net { reverse_proxy voice.tailded50c.ts.net:11434 }
-ollamaUI.voice.tailded50c.ts.net { reverse_proxy voice.tailded50c.ts.net:8080 }
+ollamaAPI.voice.${} { reverse_proxy voice.${}:11434 } # TODO: add tailscale server from GH Secrets
+ollamaUI.voice.${} { reverse_proxy voice.${}:8080 } # TODO: add tailscale server from GH Secrets
 
 # Whisper (STT) - Piper (TTS) routing
-whisper.voice.tailded50c.ts.net { reverse_proxy voice.tailded50c.ts.net:10300 }
-piper.voice.tailded50c.ts.net { reverse_proxy voice.tailded50c.ts.net:10200 }
+whisper.voice.${} { reverse_proxy voice.${}:10300 } # TODO: add tailscale server from GH Secrets
+piper.voice.${} { reverse_proxy voice.${}:10200 } # TODO: add tailscale server from GH Secrets
 
 # SSH routing
-ssh.rp4.tailded50c.ts.net { reverse_proxy rp4.tailded50c.ts.net:22 }
-ssh.voice.tailded50c.ts.net { reverse_proxy voice.tailded50c.ts.net:22 }
-ssh.mainServer.tailded50c.ts.net { reverse_proxy mainServer.tailded50c.ts.net:22 }
+ssh.rp4.${} { reverse_proxy rp4.${}:22 } # TODO: add tailscale server from GH Secrets
+ssh.voice.${} { reverse_proxy voice.${}:22 } # TODO: add tailscale server from GH Secrets
+ssh.mainServer.${} { reverse_proxy mainServer.${}:22 } # TODO: add tailscale server from GH Secrets

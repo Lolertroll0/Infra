@@ -28,7 +28,7 @@ The infrastructure is logically divided into three main nodes/environments:
 
 ### Service Provisioning
 
-- **`mainServer.tf`**: Provisions the Proxmox Virtual Machines (`HomeAssistantOS` and `ezBookKeeping`) by cloning existing templates.wwww
+- **`mainServer.tf`**: Provisions the Proxmox Virtual Machines (`HomeAssistantOS` and `ezBookKeeping`) by cloning existing templates.
 - **`rp4Orchestrator.tf`**: Deploys the Docker network and containers for the Orchestrator node (`uptimeKuma`, `caddyProxy`, `vaultwarden`).
 - **`voicePipeline.tf`**: Deploys the Docker network and containers for the Voice Pipeline node (`whisper`, `piper`, `ollama`).
 - **`images.tf`**: Declares all the Docker images required by the orchestrator and voice pipeline containers.

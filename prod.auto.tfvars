@@ -13,13 +13,14 @@ global = {
 # Tailscale vars
 tailscale = {
   tailscaleAPIKey = "" # TODO: Add tailscale API Key (Setup GH secrets)
-  tailnet = "tailded50c.ts.net" 
+  tailnet = "" # TODO: Add tailnet name (Setup GH secrets)
 }
 
 proxmox = {
   proxmoxSecret = "" # TODO: Add proxmox secret (Setup GH secrets)
   proxmoxAPI = "" # TODO: Add proxmox API (Setup GH secrets)
   proxmoxTokenId = "" # TODO: Add proxmox token ID (Setup GH secrets)
+  
   haosTemplate = "" # TODO: Add HAOS template name
   ezbkTemplate = "" # TODO: Add ezBookKeeping template name
 }  
