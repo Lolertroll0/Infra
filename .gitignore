@@ -16,4 +16,5 @@ terraform.rc
 template.md
 .agents
 .vscode
+local.tfvars
 

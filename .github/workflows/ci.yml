@@ -31,8 +31,22 @@ jobs:
 
       - name: Terraform Plan
         id: plan
+        env:
+          TF_VAR_mainServer: ${{ secrets.MAIN_SERVER_URL }}
+          TF_VAR_orchestrator: ${{ secrets.ORCHESTRATOR_URL }}
+          TF_VAR_voicePipeline: ${{ secrets.VOICE_PIPELINE_URL }}
+
+          TF_VAR_adminUser: ${{ secrets.ADMIN_USER }}
+          TF_VAR_adminEmail: ${{ secrets.ADMIN_EMAIL }}
+
+          TF_VAR_tailscaleSecret: ${{ secrets.TAILSCALE_API_KEY }}
+          TF_VAR_tailnet: ${{ secrets.TAILNET }}
+
+          TF_VAR_proxmoxAPI: ${{ secrets.PROXMOX_API_URL }}
+          TF_VAR_proxmoxTokenId: ${{ secrets.PROXMOX_TOKEN_ID }}
+          TF_VAR_proxmoxSecret: ${{ secrets.PROXMOX_SECRET }}
         run: |
-          terraform plan -var-file="prod.tfvars" -no-color > terraform.log
+          terraform plan -no-color > terraform.log
           # Capture plan for Discord (truncated for limits)
           {
             echo 'TF_PLAN<<EOF'
