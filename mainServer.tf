@@ -4,7 +4,7 @@ resource "proxmox_vm_qemu" "HomeAssistantOS" {
   target_node = "HAOS_VM"
   onboot = true
 
-  clone = var.proxmox.haosTemplate
+  clone = var.haosTemplate
   os_type = "cloudinit"
   full_clone = true
   cores = 2
@@ -26,7 +26,7 @@ resource "proxmox_vm_qemu" "ezBookKeeping" {
   desc = "EZ Bookkeeping"
   target_node = "EZBK_VM"
   onboot = true
-  clone = var.proxmox.ezbkTemplate
+  clone = var.ezbkTemplate
   os_type = "cloudinit"
   full_clone = true
   cores = 2

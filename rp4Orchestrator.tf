@@ -21,7 +21,7 @@ resource "docker_container" "uptimeKuma" {
 
   volumes {
     container_path = "/app/data"
-    host_path = "/home/${var.global.adminUser}/data/uptimeKuma" # TODO: Add host path
+    host_path = "/home/${var.adminUser}/data/uptimeKuma" # TODO: Add host path
   }
   environment = [ "TZ=UTC-5" ]
   depends_on = [ docker_container.caddyProxy ]
@@ -51,11 +51,11 @@ resource "docker_container" "caddyProxy" {
 
   volumes {
     container_path = "/etc/caddy/Caddyfile"
-    host_path = "/home/${var.global.adminUser}/config/caddyProxy/Caddyfile" # TODO: Add host path
+    host_path = "/home/${var.adminUser}/config/caddyProxy/Caddyfile" # TODO: Add host path
   }
   volumes {
     container_path = "/data"
-    host_path = "/home/${var.global.adminUser}/data/caddyProxy" # TODO: Add host path
+    host_path = "/home/${var.adminUser}/data/caddyProxy" # TODO: Add host path
   }
 }
 
@@ -75,7 +75,7 @@ resource "docker_container" "vaultWarden" {
   }
   volumes {
     container_path = "/vaultwarden/data"
-    host_path = "/home/${var.global.adminUser}/data/vaultwarden"
+    host_path = "/home/${var.adminUser}/data/vaultwarden"
   }
   depends_on = [ docker_container.caddyProxy ]
   

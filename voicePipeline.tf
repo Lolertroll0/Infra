@@ -16,7 +16,7 @@ resource "docker_container" "whisper" {
   }
   volumes {
     container_path = "/data"
-    host_path = "/home/${var.global.adminUser}/data/whisper"
+    host_path = "/home/${var.adminUser}/data/whisper"
   }
   networks_advanced {
     name = docker_network.voicePipelineInternal.name
@@ -35,7 +35,7 @@ resource "docker_container" "piper" {
   }
   volumes {
     container_path = "/data"
-    host_path = "/home/${var.global.adminUser}/data/piper"
+    host_path = "/home/${var.adminUser}/data/piper"
   }
   networks_advanced {
     name = docker_network.voicePipelineInternal.name
@@ -59,7 +59,7 @@ resource "docker_container" "ollama" {
 
   volumes {
     container_path = "/data"
-    host_path = "/home/${var.global.adminUser}/data/ollama"
+    host_path = "/home/${var.adminUser}/data/ollama"
   }
   networks_advanced {
     name = docker_network.voicePipelineInternal.name

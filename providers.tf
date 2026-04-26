@@ -1,6 +1,6 @@
 terraform {
   required_version = "1.14.9"
-  
+
   cloud {
     organization = "Lolertroll-home-Server"
     workspaces {
@@ -27,27 +27,27 @@ terraform {
 
 provider "docker" {
   alias = "mainServer"
-  host = "ssh://${var.global.adminUser}@${var.urls.mainServer}:22"
-  ssh_opts = ["-i ${var.ssh.mainKey}"]
+  host = "ssh://${var.adminUser}@${var.mainServer}:22"
+  ssh_opts = ["-i ${var.mainKey}"]
 }
 provider "docker" {
   alias = "orchestrator"
-  host = "ssh://${var.global.adminUser}@${var.urls.orchestrator}:22"
-  ssh_opts = ["-i ${var.ssh.rp4Key}"]
+  host = "ssh://${var.adminUser}@${var.orchestrator}:22"
+  ssh_opts = ["-i ${var.rp4Key}"]
 }
 provider "docker" {
   alias = "voicePipeline"
-  host = "ssh://${var.global.adminUser}@${var.urls.voicePipeline}:22"
-  ssh_opts = ["-i ${var.ssh.voiceKey}"]
+  host = "ssh://${var.adminUser}@${var.voicePipeline}:22"
+  ssh_opts = ["-i ${var.voiceKey}"]
 }
 
 provider "proxmox" {
-  pm_api_url          = "${var.proxmox.proxmoxAPI}"
-  pm_api_token_id     = "${var.proxmox.proxmoxTokenId}"
-  pm_api_token_secret = "${var.proxmox.proxmoxSecret}"
+  pm_api_url          = "${var.proxmoxAPI}"
+  pm_api_token_id     = "${var.proxmoxTokenId}"
+  pm_api_token_secret = "${var.proxmoxSecret}"
   pm_tls_insecure     = true
 }
 provider "tailscale" {
-  api_key = "${var.tailscale.tailscaleAPIKey}"
-  tailnet = "${var.tailscale.tailnet}"
+  api_key = "${var.tailscaleSecret}"
+  tailnet = "${var.tailnet}"
 }

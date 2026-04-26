@@ -9,7 +9,7 @@ resource "tailscale_acl" "home_mesh_policy" {
     ],
 
     groups = {
-      "group:admin" = ["${var.global.adminEmail}"],
+      "group:admin" = ["${var.adminEmail}"],
     },
 
     tagOwners = {
@@ -69,7 +69,7 @@ resource "tailscale_acl" "home_mesh_policy" {
           "tag:mainServer", 
           "tag:voice"
         ],
-        users  = ["root", "${var.global.adminUser}", "admin"],
+        users  = ["root", "${var.adminUser}", "admin"],
       },
     ],
 

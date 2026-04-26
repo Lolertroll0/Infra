@@ -38,7 +38,24 @@ jobs:
         run: terraform init
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var-file="prod.tfvars" 2>&1 | tee apply.log
+        run: terraform apply -auto-approve 2>&1 | tee apply.log
+        env:
+          TF_VAR_mainServer: ${{ secrets.MAIN_SERVER_URL }}
+          TF_VAR_orchestrator: ${{ secrets.ORCHESTRATOR_URL }}
+          TF_VAR_voicePipeline: ${{ secrets.VOICE_PIPELINE_URL }}
+
+          TF_VAR_adminUser: ${{ secrets.ADMIN_USER }}
+          TF_VAR_adminEmail: ${{ secrets.ADMIN_EMAIL }}
+
+          TF_VAR_tailscaleSecret: ${{ secrets.TAILSCALE_API_KEY }}
+          TF_VAR_tailnet: ${{ secrets.TAILNET }}
+
+          TF_VAR_proxmoxAPI: ${{ secrets.PROXMOX_API_URL }}
+          TF_VAR_proxmoxTokenId: ${{ secrets.PROXMOX_TOKEN_ID }}
+          TF_VAR_proxmoxSecret: ${{ secrets.PROXMOX_SECRET }}
+          # TODO: Add HAOS and EZBK Template IDs
+          # TF_VAR_haosTemplate: ""
+          # TF_VAR_ezbkTemplate: ""
 
       - name: Capture Failure Logs
         if: failure()
