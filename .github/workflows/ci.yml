@@ -1,0 +1,56 @@
+name: ci
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  createplan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 1. Connect to your Tailnet to access private nodes
+      - name: Connect to Tailnet
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.TAILSCALE_CI_AUTH_KEY }}
+
+      # 2. Configure SSH Keys for your distributed nodes
+      - name: Configure SSH Keys
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: |
+            ${{ secrets.PROXMOX_SSH_KEY }}
+            ${{ secrets.RP4_SSH_KEY }}
+            ${{ secrets.MAIN_SERVER_SSH_KEY }}
+
+      # 3. Terraform Operations
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan -var-file="prod.tfvars" -no-color > terraform.log
+          # Capture plan for Discord (truncated for limits)
+          {
+            echo 'TF_PLAN<<EOF'
+            tail -c 1500 terraform.log
+            echo 'EOF'
+          } >> "$GITHUB_ENV"
+
+      - name: send plan to PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `\`\`\`terraform\n${process.env.TF_PLAN}\n\`\``
+            })  
+
+      # 4. Logout from Tailnet
+      - name: logout from tailnet
+        run: tailscale logout

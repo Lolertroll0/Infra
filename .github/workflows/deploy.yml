@@ -1,0 +1,77 @@
+name: Deploy Infra
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.9
+          cli_config_credentials_token: ${{ secrets.TERRAFORM_API_TOKEN }}
+
+      # 1. Connect to your Tailnet to access private nodes
+      - name: Connect to Tailnet
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.TAILSCALE_CI_AUTH_KEY }}
+
+      # 2. Configure SSH Keys for your distributed nodes
+      - name: Configure SSH Keys
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: |
+            ${{ secrets.PROXMOX_SSH_KEY }}
+            ${{ secrets.RP4_SSH_KEY }}
+            ${{ secrets.MAIN_SERVER_SSH_KEY }}
+
+      # 3. Terraform Operations
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -var-file="prod.tfvars" 2>&1 | tee apply.log
+
+      - name: Capture Failure Logs
+        if: failure()
+        run: |
+          {
+            echo 'TF_APPLY_ERROR<<EOF'
+            tail -n 20 apply.log
+            echo 'EOF'
+          } >> "$GITHUB_ENV"
+
+      # 4. Observability: Send success message to Discord
+      - name: Send success message to discord
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+
+        if: success()
+        uses: Ilshidur/action-discord@0.4.0
+        with:
+          args: "Changes deployed on the infrastructure successfully."
+
+      - name: Send failure message to discord
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+
+        if: failure()
+        uses: Ilshidur/action-discord@0.4.0
+        with:
+          args: |
+            **Infrastructure Deployment FAILED** ❌
+            ```
+            ${{ env.TF_APPLY_ERROR }}
+            ```
+
+      # 5. Logout from Tailnet
+      - name: logout from tailnet
+        run: tailscale logout

@@ -1,4 +1,13 @@
 terraform {
+  required_version = "1.14.9"
+  
+  cloud {
+    organization = "Lolertroll-home-Server"
+    workspaces {
+      name = "distributed-homeserver"
+    }
+  }
+
   required_providers {
     docker = {
         source = "kreuzwerker/docker"
@@ -12,6 +21,7 @@ terraform {
         source = "tailscale/tailscale"
         version = "~> 0.28.0"
     }
+    
   }
 }
 
