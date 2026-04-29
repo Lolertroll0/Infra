@@ -22,15 +22,3 @@ resource "tailscale_tailnet_key" "infraKeyOrchestrator" {
 #   preauthorized = true
 #   ephemeral = false
 # }
-
-# Output Tailscale auth keys
-output "TailscaleAuthKeyForMainServer" {
-  value = tailscale_tailnet_key.infraKeyMainServer.key
-  sensitive = true
-  description = "Assign autorized Authkey to main server nodes and tag them as tag:mainServer"
-}
-output "TailscaleAuthKeyForOrchestrator" {
-  value = tailscale_tailnet_key.infraKeyOrchestrator.key
-  sensitive = true
-  description = "Assign autorized Authkey to orchestrator nodes and tag them as tag:orchestrator"
-}
