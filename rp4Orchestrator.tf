@@ -3,7 +3,24 @@ resource "docker_network" "orchestratorInternal" {
   name = "orchestratorInternal"
   internal = true
 }
-
+resource "null_resource" "setup_OrchestratorEnvironment" {
+  provisioner "remote-exec" {
+    inline = [
+      "curl -fsSL https://get.docker.com -o get-docker.sh",
+      "sh get-docker.sh",
+      "usermod -aG docker vagrant",
+      "systemctl enable --now docker",
+      "curl -fsSL https://tailscale.com/install.sh | sh",
+      "tailscale up --authkey=${var.tailscaleSecret}"
+    ]
+    connection {
+      type        = "ssh"
+      host        = var.rp4PrivateIp
+      user        = var.adminUser
+      timeout     = "1m"
+    }
+  }
+}
 resource "docker_container" "uptimeKuma" {
   provider = docker.orchestrator
   name = "uptimeKuma"
@@ -28,7 +45,6 @@ resource "docker_container" "uptimeKuma" {
   # TODO: add healthcheck config and logging config
   
 }
-
 resource "docker_container" "caddyProxy" {
   provider = docker.orchestrator
   name = "caddyProxy"
@@ -58,7 +74,6 @@ resource "docker_container" "caddyProxy" {
     host_path = "/home/${var.adminUser}/data/caddyProxy" # TODO: Add host path
   }
 }
-
 resource "docker_container" "vaultWarden" {
   provider = docker.orchestrator
   name = "vaultwarden"

@@ -12,19 +12,37 @@ variable "adminEmail" {
 }
 
 # List of URLs for the docker providers
-variable "mainServer" {
-	description = "List of URLs for the docker providers"
+# variable "mainServer" {
+# 	description = "List of URLs for the docker providers"
+# 	type        = string
+# }
+
+# variable "orchestrator" {
+# 	description = "List of URLs for the docker providers"
+# 	type        = string
+# }
+
+# variable "voicePipeline" {
+# 	description = "List of URLs for the docker providers"
+# 	type        = string
+# }
+
+variable "rp4PrivateIp" {
 	type        = string
+	description = "Private IP of the RP4"
+	sensitive   = false
 }
 
-variable "orchestrator" {
-	description = "List of URLs for the docker providers"
+variable "mainServerPrivateIp" {
 	type        = string
+	description = "Private IP of the Main Server"
+	sensitive   = false
 }
 
-variable "voicePipeline" {
-	description = "List of URLs for the docker providers"
+variable "voicePipelinePrivateIp" {
 	type        = string
+	description = "Private IP of the Voice Pipeline"
+	sensitive   = false
 }
 
 # SSH Keys for the docker providers
@@ -56,33 +74,33 @@ variable "tailnet" {
 	description = "Tailscale variables"
 }
 
-# Proxmox variables
-variable "proxmoxSecret" {
-	type        = string
-	sensitive   = true
-	description = "The secret for the Proxmox API - Used to spin up VMs"
-}
+# # Proxmox variables
+# variable "proxmoxSecret" {
+# 	type        = string
+# 	sensitive   = true
+# 	description = "The secret for the Proxmox API - Used to spin up VMs"
+# }
 
-variable "proxmoxAPI" {
-	type        = string
-	sensitive   = true
-	description = "The secret for the Proxmox API - Used to spin up VMs"
-}
+# variable "proxmoxAPI" {
+# 	type        = string
+# 	sensitive   = true
+# 	description = "The secret for the Proxmox API - Used to spin up VMs"
+# }
 
-variable "proxmoxTokenId" {
-	type        = string
-	sensitive   = true
-	description = "The secret for the Proxmox API - Used to spin up VMs"
-}
+# variable "proxmoxTokenId" {
+# 	type        = string
+# 	sensitive   = true
+# 	description = "The secret for the Proxmox API - Used to spin up VMs"
+# }
 
-variable "haosTemplate" {
-	type        = string
-	sensitive   = false
-	description = "The secret for the Proxmox API - Used to spin up VMs"
-}
+# variable "haosTemplate" {
+# 	type        = string
+# 	sensitive   = false
+# 	description = "The secret for the Proxmox API - Used to spin up VMs"
+# }
 
-variable "ezbkTemplate" {
-	type        = string
-	sensitive   = false
-	description = "The secret for the Proxmox API - Used to spin up VMs"
-}
+# variable "ezbkTemplate" {
+# 	type        = string
+# 	sensitive   = false
+# 	description = "The secret for the Proxmox API - Used to spin up VMs"
+# }
