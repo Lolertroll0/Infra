@@ -17,4 +17,5 @@ template.md
 .agents
 .vscode
 local.tfvars
-
+ubuntu*.log
+.vagrant

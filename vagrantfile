@@ -1,62 +1,57 @@
-Vagrant.configure("2") do |config|
-  config.vm.define "orchestrator" do |node|
+# Shared provisioning script for Docker
+$install_docker = <<-SHELL
+  apt-get update -y && apt-get upgrade -y
+  # curl -fsSL https://get.docker.com -o get-docker.sh
+  # sh get-docker.sh
+  # usermod -aG docker vagrant
+  # systemctl enable --now docker
+SHELL
 
-    # Node parameters 
-    node.vm.box = "debian/12-generic-amd64"
-    node.vm.hostname = "Orchestrador"
+Vagrant.configure("2") do |config|
+  # Global settings
+  config.vm.box = "ubuntu/trusty64"
+  # config.vm.box_version = "20191107.0.0"
+
+  # VirtualBox global provider settings
+  config.vm.provider "virtualbox" do |vb|
+    vb.linked_clone = true # Save disk space and time by sharing the base image disk
+  end
+
+  # --- Orchestrator ---
+  config.vm.define "orchestrator" do |node|
+    node.vm.hostname = "orchestrator"
     node.vm.network "private_network", ip: "192.168.56.10"
     
     node.vm.provider "virtualbox" do |vb|
-      vb.memory = "2048"
+      vb.memory = 2048
       vb.cpus = 2
     end
 
-    node.vm.provision "shell", inline: <<-SHELL
-      apt-get update -y && apt-get upgrade -y
-      curl -fsSL https://get.docker.com -o get-docker.sh
-      sh get-docker.sh
-      usermod -aG docker vagrant
-      sudo systemctl enable docker
-      sudo systemctl start docker
-    SHELL
-    end
+    node.vm.provision "shell", inline: $install_docker
   end
 
+  # --- Main Server ---
   config.vm.define "mainServer" do |node|
-
-    # Node parameters 
-    node.vm.box = "debian/12-generic-amd64"
-    node.vm.hostname = "MainServer"
+    node.vm.hostname = "main-server"
     node.vm.network "private_network", ip: "192.168.56.11"
     
     node.vm.provider "virtualbox" do |vb|
-      vb.memory = "8192"
+      vb.memory = 8192
       vb.cpus = 4
-
     end
+    # Add specific provisioning for Main Server here if needed
   end 
     
+  # --- Voice Pipeline ---
   config.vm.define "voicePipeline" do |node|
-
-    # Node parameters 
-    node.vm.box = "debian/12-generic-amd64"
-    node.vm.hostname = "voicePipeline"
+    node.vm.hostname = "voice-pipeline"
     node.vm.network "private_network", ip: "192.168.56.12"
     
     node.vm.provider "virtualbox" do |vb|
-      vb.memory = "12288"
+      vb.memory = 12288
       vb.cpus = 4
     end
 
-    node.vm.provision "shell", inline: <<-SHELL
-      apt-get update -y && apt-get upgrade -y
-      curl -fsSL https://get.docker.com -o get-docker.sh
-      sh get-docker.sh
-      usermod -aG docker vagrant
-      sudo systemctl enable docker
-      sudo systemctl start docker
-    SHELL
-    end
+    node.vm.provision "shell", inline: $install_docker
   end
-  
-end 
+end
