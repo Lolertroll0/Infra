@@ -1,10 +1,11 @@
 # Shared provisioning script for Docker
-$install_docker = <<-SHELL
+$instanciateOrchestrator = <<-SHELL
   apt-get update -y && apt-get upgrade -y
-  # curl -fsSL https://get.docker.com -o get-docker.sh
-  # sh get-docker.sh
-  # usermod -aG docker vagrant
-  # systemctl enable --now docker
+  echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKvRYUIj6BxS7EC46N7DYjkdUo+1ylZrZovLB5GIuVMU" >> /home/vagrant/.ssh/authorized_keys
+SHELL
+$instanciateVoicePipeline = <<-SHELL
+  apt-get update -y && apt-get upgrade -y
+  echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA1c6uW2yDcYCoXWaV0d/Ne9I5ntoARo12YMKp5T3Liq" >> /home/vagrant/.ssh/authorized_keys
 SHELL
 
 Vagrant.configure("2") do |config|
@@ -27,20 +28,20 @@ Vagrant.configure("2") do |config|
       vb.cpus = 2
     end
 
-    node.vm.provision "shell", inline: $install_docker
+    node.vm.provision "shell", inline: $instanciateOrchestrator
   end
 
   # --- Main Server ---
-  config.vm.define "mainServer" do |node|
-    node.vm.hostname = "main-server"
-    node.vm.network "private_network", ip: "192.168.56.11"
+  # config.vm.define "mainServer" do |node|
+  #   node.vm.hostname = "main-server"
+  #   node.vm.network "private_network", ip: "192.168.56.11"
     
-    node.vm.provider "virtualbox" do |vb|
-      vb.memory = 8192
-      vb.cpus = 4
-    end
-    # Add specific provisioning for Main Server here if needed
-  end 
+  #   node.vm.provider "virtualbox" do |vb|
+  #     vb.memory = 8192
+  #     vb.cpus = 4
+  #   end
+  #   # Add specific provisioning for Main Server here if needed
+  # end 
     
   # --- Voice Pipeline ---
   config.vm.define "voicePipeline" do |node|
@@ -52,6 +53,6 @@ Vagrant.configure("2") do |config|
       vb.cpus = 4
     end
 
-    node.vm.provision "shell", inline: $install_docker
+    node.vm.provision "shell", inline: $instanciateVoicePipeline
   end
 end

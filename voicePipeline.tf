@@ -4,6 +4,26 @@ resource "docker_network" "voicePipelineInternal" {
   internal = true
 }
 
+resource "null_resource" "setup_voicePipelineEnvironment" {
+  provisioner "remote-exec" {
+    inline = [
+      "curl -fsSL https://get.docker.com -o get-docker.sh",
+      "sh get-docker.sh",
+      "usermod -aG docker vagrant",
+      "systemctl enable --now docker",
+      "curl -fsSL https://tailscale.com/install.sh | sh",
+      "tailscale up --authkey=${var.tailscaleEphemeralKey}"
+    ]
+    connection {
+      type        = "ssh"
+      host        = var.voicePipelinePrivateIp
+      user        = var.adminUser
+      private_key = file("C:/Users/JhonVelasquez/.ssh/voicePipeline")
+      timeout     = "1m"
+    }
+  }
+}
+
 resource "docker_container" "whisper" {
   provider = docker.voicePipeline
   name = "whisper"

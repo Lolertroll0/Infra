@@ -25,20 +25,20 @@ terraform {
   }
 }
 
-provider "docker" {
-  alias = "mainServer"
-  host = "ssh://${var.adminUser}@${var.mainServer}:22"
-  # ssh_opts = ["-i ${var.mainKey}"]
-}
+# provider "docker" {
+#   alias = "mainServer"
+#   host = "ssh://${var.adminUser}@${var.mainServer}:22"
+#   # ssh_opts = ["-i ${var.mainKey}"]
+# }
 provider "docker" {
   alias = "orchestrator"
-  host = "ssh://${var.adminUser}@${var.orchestrator}:22"
-  # ssh_opts = ["-i ${var.rp4Key}"]
+  host = "ssh://${var.adminUser}@${var.rp4PrivateIp}:22"
+  ssh_opts = ["-i", "C:/Users/JhonVelasquez/.ssh/orchestrator"]
 }
 provider "docker" {
   alias = "voicePipeline"
-  host = "ssh://${var.adminUser}@${var.voicePipeline}:22"
-  # ssh_opts = ["-i ${var.voiceKey}"]
+  host = "ssh://${var.adminUser}@${var.voicePipelinePrivateIp}:22"
+  ssh_opts = ["-i", "C:/Users/JhonVelasquez/.ssh/voicePipeli  e"]
 }
 
 # provider "proxmox" {

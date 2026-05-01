@@ -46,20 +46,20 @@ variable "voicePipelinePrivateIp" {
 }
 
 # SSH Keys for the docker providers
-variable "mainKey" {
-	type        = string
-	sensitive   = true
-}
+# variable "mainKey" {
+# 	type        = string
+# 	sensitive   = true
+# }
 
-variable "rp4Key" {
-	type        = string
-	sensitive   = true
-}
+# variable "rp4Key" {
+# 	type        = string
+# 	sensitive   = true
+# }
 
-variable "voiceKey" {
-	type        = string
-	sensitive   = true
-}
+# variable "voiceKey" {
+# 	type        = string
+# 	sensitive   = true
+# }
 
 # Tailscale variables
 variable "tailscaleSecret" {
@@ -72,6 +72,12 @@ variable "tailnet" {
 	type        = string
 	sensitive   = false
 	description = "Tailscale variables"
+}
+
+variable "tailscaleEphemeralKey" {
+	type        = string
+	sensitive   = true
+	description = "TailscaleEphemeralKey for the RP4"
 }
 
 # # Proxmox variables

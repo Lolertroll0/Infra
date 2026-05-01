@@ -11,12 +11,13 @@ resource "null_resource" "setup_OrchestratorEnvironment" {
       "usermod -aG docker vagrant",
       "systemctl enable --now docker",
       "curl -fsSL https://tailscale.com/install.sh | sh",
-      "tailscale up --authkey=${var.tailscaleSecret}"
+      "tailscale up --authkey=${var.tailscaleEphemeralKey}"
     ]
     connection {
       type        = "ssh"
       host        = var.rp4PrivateIp
       user        = var.adminUser
+        private_key = file("C:/Users/JhonVelasquez/.ssh/orchestrator")
       timeout     = "1m"
     }
   }
@@ -26,7 +27,6 @@ resource "docker_container" "uptimeKuma" {
   name = "uptimeKuma"
   image = docker_image.uptimeKuma.name
   restart = "unless-stopped"
-
   networks_advanced {
     name = docker_network.orchestratorInternal.name
   }
@@ -40,7 +40,6 @@ resource "docker_container" "uptimeKuma" {
     container_path = "/app/data"
     host_path = "/home/${var.adminUser}/data/uptimeKuma" # TODO: Add host path
   }
-  environment = [ "TZ=UTC-5" ]
   depends_on = [ docker_container.caddyProxy ]
   # TODO: add healthcheck config and logging config
   
@@ -53,9 +52,10 @@ resource "docker_container" "caddyProxy" {
 
   networks_advanced {
     name = docker_network.orchestratorInternal.name
-    capabilities = [ "NET_ADMIN" ]
   }
-
+  capabilities {
+    add = ["NET_ADMIN", "NET_BIND_SERVICE"]
+  }
   ports {
     internal = 80
     external = 80
