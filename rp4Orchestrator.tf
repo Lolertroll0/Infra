@@ -17,7 +17,7 @@ resource "null_resource" "setup_OrchestratorEnvironment" {
       type        = "ssh"
       host        = var.rp4PrivateIp
       user        = var.adminUser
-        private_key = file("C:/Users/JhonVelasquez/.ssh/orchestrator")
+      private_key = file("C:/Users/JhonVelasquez/.ssh/orchestrator")
       timeout     = "1m"
     }
   }
