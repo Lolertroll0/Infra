@@ -1,4 +1,11 @@
-# Shared provisioning script for Docker
+$installDocker = <<-SHELL
+  if ! command -v docker >/dev/null 2>&1; then
+    curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
+    sh /tmp/get-docker.sh
+    usermod -aG docker vagrant
+  fi
+SHELL
+
 $instanciateOrchestrator = <<-SHELL
   apt-get update -y && apt-get upgrade -y
   echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKvRYUIj6BxS7EC46N7DYjkdUo+1ylZrZovLB5GIuVMU" >> /home/vagrant/.ssh/authorized_keys
@@ -8,27 +15,36 @@ $instanciateVoicePipeline = <<-SHELL
   echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA1c6uW2yDcYCoXWaV0d/Ne9I5ntoARo12YMKp5T3Liq" >> /home/vagrant/.ssh/authorized_keys
 SHELL
 
+$enableSshKey = <<-SHELL
+  sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+  sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+  systemctl reload sshd
+SHELL
+
 Vagrant.configure("2") do |config|
   # Global settings
-  config.vm.box = "ubuntu/trusty64"
+  config.vm.box = "ubuntu/jammy64"
   # config.vm.box_version = "20191107.0.0"
+  config.vm.boot_timeout = 600 # Increase to 10 minutes
 
   # VirtualBox global provider settings
   config.vm.provider "virtualbox" do |vb|
     vb.linked_clone = true # Save disk space and time by sharing the base image disk
   end
 
-  # --- Orchestrator ---
+  # --- Orchestra tor ---
   config.vm.define "orchestrator" do |node|
     node.vm.hostname = "orchestrator"
     node.vm.network "private_network", ip: "192.168.56.10"
     
     node.vm.provider "virtualbox" do |vb|
-      vb.memory = 2048
+      vb.memory = 4096
       vb.cpus = 2
     end
 
     node.vm.provision "shell", inline: $instanciateOrchestrator
+    node.vm.provision "shell", inline: $installDocker
+    node.vm.provision "shell", inline: $enableSshKey
   end
 
   # --- Main Server ---
@@ -49,10 +65,12 @@ Vagrant.configure("2") do |config|
     node.vm.network "private_network", ip: "192.168.56.12"
     
     node.vm.provider "virtualbox" do |vb|
-      vb.memory = 12288
+      vb.memory = 8192
       vb.cpus = 4
     end
 
     node.vm.provision "shell", inline: $instanciateVoicePipeline
+    node.vm.provision "shell", inline: $installDocker
+    node.vm.provision "shell", inline: $enableSshKey
   end
 end

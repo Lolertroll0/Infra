@@ -1,32 +1,41 @@
 resource "docker_network" "orchestratorInternal" {
-  provider = docker.orchestrator
-  name = "orchestratorInternal"
-  internal = true
+  provider   = docker.orchestrator
+  name       = "orchestratorInternal"
+  internal   = true
+  depends_on = [null_resource.setup_OrchestratorEnvironment]
 }
+
 resource "null_resource" "setup_OrchestratorEnvironment" {
   provisioner "remote-exec" {
     inline = [
-      "curl -fsSL https://get.docker.com -o get-docker.sh",
-      "sh get-docker.sh",
-      "usermod -aG docker vagrant",
-      "systemctl enable --now docker",
-      "curl -fsSL https://tailscale.com/install.sh | sh",
-      "tailscale up --authkey=${var.tailscaleEphemeralKey}"
+      "exec > /tmp/tf-provision.log 2>&1",
+      "set -x",
+      "export DEBIAN_FRONTEND=noninteractive",
+      # Docker is now pre-installed via Vagrant
+      "if command -v systemctl >/dev/null 2>&1; then sudo systemctl enable --now docker; elif command -v service >/dev/null 2>&1; then sudo service docker start; fi",
+      "curl -fsSL https://tailscale.com/install.sh | sudo sh",
+      "sudo tailscale up --authkey=${var.tailscaleEphemeralKey}",
+
+      # Missing volumes setup
+      "mkdir -p /home/${var.adminUser}/config/caddyProxy",
+      "mkdir -p /home/${var.adminUser}/data/caddyProxy",
+      "mkdir -p /home/${var.adminUser}/data/uptimeKuma",
+      "mkdir -p /home/${var.adminUser}/data/vaultwarden"
     ]
     connection {
       type        = "ssh"
       host        = var.rp4PrivateIp
       user        = var.adminUser
-      private_key = file("C:/Users/JhonVelasquez/.ssh/orchestrator")
+      private_key = file(var.rp4Key)
       timeout     = "1m"
     }
   }
 }
 resource "docker_container" "uptimeKuma" {
   provider = docker.orchestrator
-  name = "uptimeKuma"
-  image = docker_image.uptimeKuma.name
-  restart = "unless-stopped"
+  name     = "uptimeKuma"
+  image    = docker_image.uptimeKuma.name
+  restart  = "unless-stopped"
   networks_advanced {
     name = docker_network.orchestratorInternal.name
   }
@@ -37,18 +46,21 @@ resource "docker_container" "uptimeKuma" {
   }
 
   volumes {
-    container_path = "/app/data"
-    host_path = "/home/${var.adminUser}/data/uptimeKuma" # TODO: Add host path
+    container_path = "/data"
+    host_path      = "/home/${var.adminUser}/data/uptimeKuma"
   }
-  depends_on = [ docker_container.caddyProxy ]
+  depends_on = [
+    docker_container.caddyProxy,
+    null_resource.setup_OrchestratorEnvironment
+  ]
   # TODO: add healthcheck config and logging config
-  
+
 }
 resource "docker_container" "caddyProxy" {
   provider = docker.orchestrator
-  name = "caddyProxy"
-  image = docker_image.caddyProxy.name
-  restart = "unless-stopped"
+  name     = "caddyProxy"
+  image    = docker_image.caddyProxy.name
+  restart  = "unless-stopped"
 
   networks_advanced {
     name = docker_network.orchestratorInternal.name
@@ -66,19 +78,20 @@ resource "docker_container" "caddyProxy" {
   }
 
   volumes {
-    container_path = "/etc/caddy/Caddyfile"
-    host_path = "/home/${var.adminUser}/config/caddyProxy/Caddyfile" # TODO: Add host path
+    container_path = "/etc/caddy/"
+    host_path      = "/home/${var.adminUser}/config/caddyProxy/Caddyfile"
   }
   volumes {
     container_path = "/data"
-    host_path = "/home/${var.adminUser}/data/caddyProxy" # TODO: Add host path
+    host_path      = "/home/${var.adminUser}/data/caddyProxy"
   }
+  depends_on = [null_resource.setup_OrchestratorEnvironment]
 }
 resource "docker_container" "vaultWarden" {
   provider = docker.orchestrator
-  name = "vaultwarden"
-  image = docker_image.vaultWarden.name
-  restart = "unless-stopped"
+  name     = "vaultwarden"
+  image    = docker_image.vaultWarden.name
+  restart  = "unless-stopped"
 
   networks_advanced {
     name = docker_network.orchestratorInternal.name
@@ -89,9 +102,12 @@ resource "docker_container" "vaultWarden" {
     external = 80
   }
   volumes {
-    container_path = "/vaultwarden/data"
-    host_path = "/home/${var.adminUser}/data/vaultwarden"
+    container_path = "/data"
+    host_path      = "/home/${var.adminUser}/data/vaultwarden"
   }
-  depends_on = [ docker_container.caddyProxy ]
-  
+  depends_on = [
+    docker_container.caddyProxy,
+    null_resource.setup_OrchestratorEnvironment
+  ]
+
 }

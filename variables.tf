@@ -1,14 +1,14 @@
 # Global variables
 variable "adminUser" {
-	type        = string
-	description = "Global variables"
-	sensitive   = true
+  type        = string
+  description = "Global variables"
+  sensitive   = true
 }
 
 variable "adminEmail" {
-	type        = string
-	description = "Global variables"
-	sensitive   = true
+  type        = string
+  description = "Global variables"
+  sensitive   = true
 }
 
 # List of URLs for the docker providers
@@ -28,21 +28,21 @@ variable "adminEmail" {
 # }
 
 variable "rp4PrivateIp" {
-	type        = string
-	description = "Private IP of the RP4"
-	sensitive   = false
+  type        = string
+  description = "Private IP of the RP4"
+  sensitive   = false
 }
 
 variable "mainServerPrivateIp" {
-	type        = string
-	description = "Private IP of the Main Server"
-	sensitive   = false
+  type        = string
+  description = "Private IP of the Main Server"
+  sensitive   = false
 }
 
 variable "voicePipelinePrivateIp" {
-	type        = string
-	description = "Private IP of the Voice Pipeline"
-	sensitive   = false
+  type        = string
+  description = "Private IP of the Voice Pipeline"
+  sensitive   = false
 }
 
 # SSH Keys for the docker providers
@@ -51,33 +51,33 @@ variable "voicePipelinePrivateIp" {
 # 	sensitive   = true
 # }
 
-# variable "rp4Key" {
-# 	type        = string
-# 	sensitive   = true
-# }
+variable "rp4Key" {
+  type      = string
+  sensitive = true
+}
 
-# variable "voiceKey" {
-# 	type        = string
-# 	sensitive   = true
-# }
+variable "voiceKey" {
+  type      = string
+  sensitive = true
+}
 
 # Tailscale variables
 variable "tailscaleSecret" {
-	type        = string
-	sensitive   = true
-	description = "Tailscale variables"
+  type        = string
+  sensitive   = true
+  description = "Tailscale variables"
 }
 
 variable "tailnet" {
-	type        = string
-	sensitive   = false
-	description = "Tailscale variables"
+  type        = string
+  sensitive   = false
+  description = "Tailscale variables"
 }
 
 variable "tailscaleEphemeralKey" {
-	type        = string
-	sensitive   = true
-	description = "TailscaleEphemeralKey for the RP4"
+  type        = string
+  sensitive   = true
+  description = "TailscaleEphemeralKey for the RP4"
 }
 
 # # Proxmox variables

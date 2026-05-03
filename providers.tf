@@ -1,5 +1,5 @@
 terraform {
-  required_version = "1.15.0"
+  required_version = ">= 1.15"
 
   cloud {
     organization = "Lolertroll-home-Server"
@@ -10,18 +10,18 @@ terraform {
 
   required_providers {
     docker = {
-        source = "kreuzwerker/docker"
-        version = "~> 4.0"
+      source  = "kreuzwerker/docker"
+      version = "~> 4.0"
     }
     # proxmox = {
     #     source = "Telmate/proxmox"
     #     version = "~> 2.9"
     # }
     tailscale = {
-        source = "tailscale/tailscale"
-        version = "~> 0.28.0"
+      source  = "tailscale/tailscale"
+      version = "~> 0.28.0"
     }
-    
+
   }
 }
 
@@ -31,14 +31,15 @@ terraform {
 #   # ssh_opts = ["-i ${var.mainKey}"]
 # }
 provider "docker" {
-  alias = "orchestrator"
-  host = "ssh://${var.adminUser}@${var.rp4PrivateIp}:22"
-  ssh_opts = ["-i", "C:/Users/JhonVelasquez/.ssh/orchestrator"]
+  alias    = "orchestrator"
+  host     = "ssh://${var.adminUser}@${var.rp4PrivateIp}:22"
+  ssh_opts = ["-i", var.rp4Key, "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"]
 }
+
 provider "docker" {
-  alias = "voicePipeline"
-  host = "ssh://${var.adminUser}@${var.voicePipelinePrivateIp}:22"
-  ssh_opts = ["-i", "C:/Users/JhonVelasquez/.ssh/voicePipeli  e"]
+  alias    = "voicePipeline"
+  host     = "ssh://${var.adminUser}@${var.voicePipelinePrivateIp}:22"
+  ssh_opts = ["-i", var.voiceKey, "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"]
 }
 
 # provider "proxmox" {
@@ -48,6 +49,6 @@ provider "docker" {
 #   pm_tls_insecure     = true
 # }
 provider "tailscale" {
-  api_key = "${var.tailscaleSecret}"
-  tailnet = "${var.tailnet}"
+  api_key = var.tailscaleSecret
+  tailnet = var.tailnet
 }

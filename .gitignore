@@ -19,3 +19,6 @@ template.md
 local.tfvars
 ubuntu*.log
 .vagrant
+tfplan.log
+errlog.log
+tfplan.log

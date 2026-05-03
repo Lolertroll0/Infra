@@ -1,24 +1,30 @@
 resource "docker_network" "voicePipelineInternal" {
-  provider = docker.voicePipeline
-  name = "voicePipelineInternal"
-  internal = true
+  provider   = docker.voicePipeline
+  name       = "voicePipelineInternal"
+  internal   = true
+  depends_on = [null_resource.setup_voicePipelineEnvironment]
 }
 
 resource "null_resource" "setup_voicePipelineEnvironment" {
   provisioner "remote-exec" {
     inline = [
-      "curl -fsSL https://get.docker.com -o get-docker.sh",
-      "sh get-docker.sh",
-      "usermod -aG docker vagrant",
-      "systemctl enable --now docker",
-      "curl -fsSL https://tailscale.com/install.sh | sh",
-      "tailscale up --authkey=${var.tailscaleEphemeralKey}"
+      "exec > /tmp/tf-provision.log 2>&1",
+      "set -x",
+      "export DEBIAN_FRONTEND=noninteractive",
+      # Docker is now pre-installed via Vagrant
+      "if command -v systemctl >/dev/null 2>&1; then sudo systemctl enable --now docker; elif command -v service >/dev/null 2>&1; then sudo service docker start; fi",
+      "curl -fsSL https://tailscale.com/install.sh | sudo sh",
+      "sudo tailscale up --authkey=${var.tailscaleEphemeralKey}",
+      # Missing volumes setup
+      "mkdir -p /home/${var.adminUser}/data/whisper/",
+      "mkdir -p /home/${var.adminUser}/data/piper/",
+      "mkdir -p /home/${var.adminUser}/data/ollama/"
     ]
     connection {
       type        = "ssh"
       host        = var.voicePipelinePrivateIp
       user        = var.adminUser
-      private_key = file("C:/Users/JhonVelasquez/.ssh/voicePipeline")
+      private_key = file(var.voiceKey)
       timeout     = "1m"
     }
   }
@@ -26,9 +32,9 @@ resource "null_resource" "setup_voicePipelineEnvironment" {
 
 resource "docker_container" "whisper" {
   provider = docker.voicePipeline
-  name = "whisper"
-  image = docker_image.whisper.name
-  restart = "unless-stopped"
+  name     = "whisper"
+  image    = docker_image.whisper.name
+  restart  = "unless-stopped"
 
   ports {
     internal = 10300
@@ -36,18 +42,19 @@ resource "docker_container" "whisper" {
   }
   volumes {
     container_path = "/data"
-    host_path = "/home/${var.adminUser}/data/whisper"
+    host_path      = "/home/${var.adminUser}/data/whisper"
   }
   networks_advanced {
     name = docker_network.voicePipelineInternal.name
   }
+  depends_on = [null_resource.setup_voicePipelineEnvironment]
 }
 
 resource "docker_container" "piper" {
   provider = docker.voicePipeline
-  name = "piper"
-  image = docker_image.piper.name
-  restart = "unless-stopped"
+  name     = "piper"
+  image    = docker_image.piper.name
+  restart  = "unless-stopped"
 
   ports {
     internal = 10200
@@ -55,18 +62,19 @@ resource "docker_container" "piper" {
   }
   volumes {
     container_path = "/data"
-    host_path = "/home/${var.adminUser}/data/piper"
+    host_path      = "/home/${var.adminUser}/data/piper"
   }
   networks_advanced {
     name = docker_network.voicePipelineInternal.name
   }
+  depends_on = [null_resource.setup_voicePipelineEnvironment]
 }
 
 resource "docker_container" "ollama" {
   provider = docker.voicePipeline
-  name = "ollama"
-  image = docker_image.ollama.name
-  restart = "unless-stopped"
+  name     = "ollama"
+  image    = docker_image.ollama.name
+  restart  = "unless-stopped"
 
   ports {
     internal = 11434
@@ -79,9 +87,10 @@ resource "docker_container" "ollama" {
 
   volumes {
     container_path = "/data"
-    host_path = "/home/${var.adminUser}/data/ollama"
+    host_path      = "/home/${var.adminUser}/data/ollama"
   }
   networks_advanced {
     name = docker_network.voicePipelineInternal.name
   }
+  depends_on = [null_resource.setup_voicePipelineEnvironment]
 }
