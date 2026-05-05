@@ -17,8 +17,3 @@ ollama.voice.${tailnet} { reverse_proxy voice.${tailnet}:8080 }
 # Whisper (STT) - Piper (TTS) routing
 whisper.voice.${tailnet} { reverse_proxy voice.${tailnet}:10300 }
 piper.voice.${tailnet} { reverse_proxy voice.${tailnet}:10200 }
-
-# SSH routing
-ssh.rp4.${tailnet} { reverse_proxy rp4.${tailnet}:22 }
-ssh.voice.${tailnet} { reverse_proxy voice.${tailnet}:22 }
-ssh.mainServer.${tailnet} { reverse_proxy mainServer.${tailnet}:22 }
