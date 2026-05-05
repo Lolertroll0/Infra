@@ -1,24 +1,24 @@
 # Monitoring (Uptime Kuma)
-monitor.rp4.${} { reverse_proxy localhost:3001 } # TODO: add tailscale server from GH Secrets
+monitor.rp4.${tailnet} { reverse_proxy localhost:3001 }
 
 # Password manager (Vaultwarden)
-vaultwarden.rp4.${} { reverse_proxy localhost:80 } # TODO: add tailscale server from GH Secrets
+vaultwarden.rp4.${tailnet} { reverse_proxy localhost:80 }
 
 # Home Assistant routing
-homeassistant.mainServer.${} { reverse_proxy mainServer.${}:8123 } # TODO: add tailscale server from GH Secrets
+homeassistant.mainServer.${tailnet} { reverse_proxy mainServer.${tailnet}:8123 }
 
 # ezBookKeeping routing
-ezbk.mainServer.${} { reverse_proxy mainServer.${}:8096 } # TODO: add tailscale server from GH Secrets
+ezbk.mainServer.${tailnet} { reverse_proxy mainServer.${tailnet}:8096 }
 
 # Ollama routing
-ollamaAPI.voice.${} { reverse_proxy voice.${}:11434 } # TODO: add tailscale server from GH Secrets
-ollamaUI.voice.${} { reverse_proxy voice.${}:8080 } # TODO: add tailscale server from GH Secrets
+ollamapi.voice.${tailnet} { reverse_proxy voice.${tailnet}:11434 }
+ollama.voice.${tailnet} { reverse_proxy voice.${tailnet}:8080 }
 
 # Whisper (STT) - Piper (TTS) routing
-whisper.voice.${} { reverse_proxy voice.${}:10300 } # TODO: add tailscale server from GH Secrets
-piper.voice.${} { reverse_proxy voice.${}:10200 } # TODO: add tailscale server from GH Secrets
+whisper.voice.${tailnet} { reverse_proxy voice.${tailnet}:10300 }
+piper.voice.${tailnet} { reverse_proxy voice.${tailnet}:10200 }
 
 # SSH routing
-ssh.rp4.${} { reverse_proxy rp4.${}:22 } # TODO: add tailscale server from GH Secrets
-ssh.voice.${} { reverse_proxy voice.${}:22 } # TODO: add tailscale server from GH Secrets
-ssh.mainServer.${} { reverse_proxy mainServer.${}:22 } # TODO: add tailscale server from GH Secrets
+ssh.rp4.${tailnet} { reverse_proxy rp4.${tailnet}:22 }
+ssh.voice.${tailnet} { reverse_proxy voice.${tailnet}:22 }
+ssh.mainServer.${tailnet} { reverse_proxy mainServer.${tailnet}:22 }

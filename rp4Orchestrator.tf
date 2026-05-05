@@ -30,6 +30,19 @@ resource "null_resource" "setup_OrchestratorEnvironment" {
       timeout     = "1m"
     }
   }
+
+  provisioner "file" {
+    content     = templatefile("${path.module}/caddyfile", { tailnet = var.tailnet })
+    destination = "/home/${var.adminUser}/config/caddyProxy/Caddyfile"
+
+    connection {
+      type        = "ssh"
+      host        = var.rp4PrivateIp
+      user        = var.adminUser
+      private_key = file(var.rp4Key)
+      timeout     = "1m"
+    }
+  }
 }
 resource "docker_container" "uptimeKuma" {
   provider = docker.orchestrator

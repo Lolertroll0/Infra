@@ -32,6 +32,14 @@ jobs:
             ${{ secrets.PROXMOX_SSH_KEY }}
             ${{ secrets.RP4_SSH_KEY }}
             ${{ secrets.MAIN_SERVER_SSH_KEY }}
+            ${{ secrets.VOICE_SSH_KEY }}
+
+      # 2.1 Provision SSH Key files for Terraform provider (needed for -i flag)
+      - name: Provision SSH Key Files
+        run: |
+          echo "${{ secrets.RP4_SSH_KEY }}" > /tmp/rp4_key
+          echo "${{ secrets.VOICE_SSH_KEY }}" > /tmp/voice_key
+          chmod 600 /tmp/rp4_key /tmp/voice_key
 
       # 3. Terraform Operations
       - name: Terraform Init
@@ -49,6 +57,10 @@ jobs:
 
           TF_VAR_tailscaleSecret: ${{ secrets.TAILSCALE_API_KEY }}
           TF_VAR_tailnet: ${{ secrets.TAILNET }}
+          TF_VAR_tailscaleEphemeralKey: ${{ secrets.TAILSCALE_EPHEMERAL_KEY }}
+
+          TF_VAR_rp4Key: "/tmp/rp4_key"
+          TF_VAR_voiceKey: "/tmp/voice_key"
 
           TF_VAR_proxmoxAPI: ${{ secrets.PROXMOX_API_URL }}
           TF_VAR_proxmoxTokenId: ${{ secrets.PROXMOX_TOKEN_ID }}
