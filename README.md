@@ -1,40 +1,63 @@
-# Infrastructure Repository
+# Infrastructure-as-Code: Distributed Home Lab
 
-This repository contains the Terraform configuration for a distributed home lab or private infrastructure. It provisions resources across Proxmox VMs and Docker hosts, all securely connected and managed via a Tailscale mesh network.
+This repository contains the Terraform configuration for a professional-grade, distributed home infrastructure. It manages resources across Proxmox virtual machines and remote Docker hosts, all interconnected via a **Zero Trust** Tailscale mesh network.
 
-## Architecture & Environments
+## 🚀 Project Overview
 
-The infrastructure is logically divided into three main nodes/environments:
+The project is currently transitioning from a simulated Vagrant environment to a **Physical Hardware Deployment**. The architecture is designed for high security, isolation, and automated observability.
 
-1. **Main Server (Proxmox)**: Hosts primary virtual machines.
-   - **Home Assistant OS**: Main home automation server.
-   - **ezBookKeeping**: Financial and bookkeeping application.
-2. **Orchestrator (Docker on a Raspberry Pi / rp4)**: Runs core management and utility services.
-   - **Caddy**: Reverse proxy for routing traffic across the tailnet to the various services.
-   - **Uptime Kuma**: Monitoring and uptime tracking.
-   - **Vaultwarden**: Password manager.
-3. **Voice Pipeline (Docker)**: Dedicated host for voice and AI processing.
-   - **Ollama (+ Open WebUI)**: Local LLM hosting and chat interface.
-   - **Whisper**: Speech-to-Text (STT) via Wyoming protocol.
-   - **Piper**: Text-to-Speech (TTS) via Wyoming protocol.
+### 🏗️ Architecture
 
-## Repository Files
+The infrastructure is logically divided into three specialized environments:
 
-### Core Terraform Files
+1.  **Main Server (Proxmox / x86_64)**:
+    *   **Home Assistant OS (HAOS)**: The heart of home automation, running as a dedicated appliance.
+    *   **ezBookKeeping**: A financial tracking suite running in a Debian-based Docker container.
+2.  **Orchestrator Node (Raspberry Pi 4)**:
+    *   **Caddy Proxy**: Acts as the gateway, routing `*.ts.net` MagicDNS traffic to internal services.
+    *   **Uptime Kuma**: Real-time monitoring and heartbeat tracking for all nodes.
+    *   **Vaultwarden**: Self-hosted Bitwarden-compatible password management.
+3.  **Voice & AI Pipeline**:
+    *   **Ollama**: Local hosting for Large Language Models.
+    *   **Whisper & Piper**: STT/TTS processing via the Wyoming protocol for private voice control.
 
-- **`providers.tf`**: Configures the necessary Terraform providers (`kreuzwerker/docker`, `Telmate/proxmox`, `tailscale/tailscale`). It also establishes SSH connections to the various remote Docker hosts.
-- **`variables.tf`**: Defines the expected input variables for the configuration, including credentials, URLs, and SSH keys.
-- **`prod.auto.tfvars`**: Contains the actual variable values for the production environment. Includes URLs, Tailscale API keys, Proxmox secrets, and paths to SSH keys. *(Note: Secrets are meant to be injected via CI/CD like GitHub Actions).*
+## 🔒 Security & Networking
 
-### Service Provisioning
+*   **Zero Trust**: No ports are opened on the router. All inter-node communication happens over **Tailscale**.
+*   **MagicDNS**: Services are accessed via user-friendly names (e.g., `vaultwarden.rp4.your-tailnet.ts.net`).
+*   **SSH Isolation**: All Docker providers connect over SSH using dedicated private keys, managed securely via CI/CD.
 
-- **`mainServer.tf`**: Provisions the Proxmox Virtual Machines (`HomeAssistantOS` and `ezBookKeeping`) by cloning existing templates.
-- **`rp4Orchestrator.tf`**: Deploys the Docker network and containers for the Orchestrator node (`uptimeKuma`, `caddyProxy`, `vaultwarden`).
-- **`voicePipeline.tf`**: Deploys the Docker network and containers for the Voice Pipeline node (`whisper`, `piper`, `ollama`).
-- **`images.tf`**: Declares all the Docker images required by the orchestrator and voice pipeline containers.
+## 🤖 CI/CD & Automation
 
-### Networking & Access Control
+The project uses **GitHub Actions** for fully automated deployments:
 
-- **`caddyfile`**: The Caddy configuration file that maps `*.ts.net` Tailscale subdomains to their respective internal services and ports.
-- **`tailscaleKeyGen.tf`**: Generates reusable, pre-authorized Tailscale auth keys to easily onboard and tag new nodes (`tag:mainServer`, `tag:orchestrator`).
-- **`tailscalePolicy.tf`**: Defines the Tailscale ACLs, dictating which nodes and users can access specific ports/services, as well as managing Tailscale SSH access rules.
+*   **Continuous Deployment**: Pushing to the `main` branch triggers a Terraform Apply.
+*   **Secret Management**: Sensitive data (API keys, SSH keys, passwords) is injected into Terraform via GitHub Secrets.
+*   **Observability**: Success/Failure notifications are sent to **Discord**.
+*   **Artifacts**: In the event of a failure, the last 500 lines of the Terraform log are captured and uploaded as an artifact for debugging.
+
+## 📂 Repository Structure
+
+*   `providers.tf`: Definition of Docker, Proxmox, and Tailscale providers.
+*   `variables.tf`: Centrally managed variables with enhanced descriptions.
+*   `mainServer.tf`: Proxmox VM definitions and Cloud-Init provisioning.
+*   `rp4Orchestrator.tf`: Management services and Caddy configuration.
+*   `voicePipeline.tf`: AI and Voice processing stack.
+*   `caddyfile`: Reverse proxy rules with Tailnet placeholder substitution.
+
+## 🛠️ Local Development
+
+For local testing, use a `local.tfvars` file (which is gitignored). 
+
+```hcl
+# Example local.tfvars
+adminUser     = "your-user"
+proxmoxAPI    = "https://proxmox.local:8006/api2/json"
+tailscaleMainAuthKey = "tskey-auth-..."
+```
+
+To initialize:
+```bash
+terraform init
+terraform plan -var-file="local.tfvars"
+```

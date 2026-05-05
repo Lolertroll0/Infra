@@ -14,7 +14,7 @@ resource "null_resource" "setup_voicePipelineEnvironment" {
       # Docker is now pre-installed via Vagrant
       "if command -v systemctl >/dev/null 2>&1; then sudo systemctl enable --now docker; elif command -v service >/dev/null 2>&1; then sudo service docker start; fi",
       "curl -fsSL https://tailscale.com/install.sh | sudo sh",
-      "sudo tailscale up --authkey=${var.tailscaleEphemeralKey}",
+      "sudo tailscale up --authkey=${var.tailscaleVoiceAuthKey}",
       # Missing volumes setup
       "mkdir -p /home/${var.adminUser}/data/whisper/",
       "mkdir -p /home/${var.adminUser}/data/piper/",
@@ -22,7 +22,7 @@ resource "null_resource" "setup_voicePipelineEnvironment" {
     ]
     connection {
       type        = "ssh"
-      host        = var.voicePipelinePrivateIp
+      host        = var.voicePipeline
       user        = var.adminUser
       private_key = file(var.voiceKey)
       timeout     = "1m"

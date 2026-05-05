@@ -39,7 +39,9 @@ jobs:
         run: |
           echo "${{ secrets.RP4_SSH_KEY }}" > /tmp/rp4_key
           echo "${{ secrets.VOICE_SSH_KEY }}" > /tmp/voice_key
-          chmod 600 /tmp/rp4_key /tmp/voice_key
+          echo "${{ secrets.MAIN_SERVER_SSH_KEY }}" > /tmp/main_key
+
+          chmod 600 /tmp/rp4_key /tmp/voice_key /tmp/main_key
 
       # 3. Terraform Operations
       - name: Terraform Init
@@ -57,14 +59,19 @@ jobs:
 
           TF_VAR_tailscaleSecret: ${{ secrets.TAILSCALE_API_KEY }}
           TF_VAR_tailnet: ${{ secrets.TAILNET }}
-          TF_VAR_tailscaleEphemeralKey: ${{ secrets.TAILSCALE_EPHEMERAL_KEY }}
+
+          TF_VAR_tailscaleRP4AuthKey: ${{ secrets.TAILSCALE_RP4_AUTH_KEY }}
+          TF_VAR_tailscaleMainAuthKey: ${{ secrets.TAILSCALE_MAIN_AUTH_KEY }}
+          TF_VAR_tailscaleVoiceAuthKey: ${{ secrets.TAILSCALE_VOICE_AUTH_KEY }}
 
           TF_VAR_rp4Key: "/tmp/rp4_key"
+          TF_VAR_mainKey: "/tmp/main_key"
           TF_VAR_voiceKey: "/tmp/voice_key"
 
           TF_VAR_proxmoxAPI: ${{ secrets.PROXMOX_API_URL }}
           TF_VAR_proxmoxTokenId: ${{ secrets.PROXMOX_TOKEN_ID }}
           TF_VAR_proxmoxSecret: ${{ secrets.PROXMOX_SECRET }}
+
           # TODO: Add HAOS and EZBK Template IDs
           # TF_VAR_haosTemplate: ""
           # TF_VAR_ezbkTemplate: ""
@@ -72,11 +79,20 @@ jobs:
       - name: Capture Failure Logs
         if: failure()
         run: |
+          tail -n 500 apply.log > error_log.txt
           {
             echo 'TF_APPLY_ERROR<<EOF'
-            tail -n 20 apply.log
+            tail -n 20 error_log.txt
             echo 'EOF'
           } >> "$GITHUB_ENV"
+
+      - name: Upload Error Log
+        id: artifact-upload
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-error-log
+          path: error_log.txt
 
       # 4. Observability: Send success message to Discord
       - name: Send success message to discord
@@ -93,13 +109,11 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
 
         if: failure()
-        uses: Ilshidur/action-discord@0.4.0
+        uses: Ilshidur/action-discord@v4
         with:
           args: |
             **Infrastructure Deployment FAILED** ❌
-            ```
-            ${{ env.TF_APPLY_ERROR }}
-            ```
+            [View Full Error Log](${{ steps.artifact-upload.outputs.artifact-url }})
 
       # 5. Logout from Tailnet
       - name: logout from tailnet
