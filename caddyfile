@@ -8,7 +8,7 @@ vaultwarden.rp4.${tailnet} { reverse_proxy localhost:80 }
 homeassistant.mainServer.${tailnet} { reverse_proxy mainServer.${tailnet}:8123 }
 
 # ezBookKeeping routing
-ezbk.mainServer.${tailnet} { reverse_proxy mainServer.${tailnet}:8096 }
+ezbk.mainServer.${tailnet} { reverse_proxy mainServer.${tailnet}:8080 }
 
 # Ollama routing
 ollamapi.voice.${tailnet} { reverse_proxy voice.${tailnet}:11434 }

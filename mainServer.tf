@@ -65,7 +65,7 @@ resource "null_resource" "setup_ezBookKeeping" {
 
       # --- TAILSCALE SETUP ---
       "curl -fsSL https://tailscale.com/install.sh | sudo sh",
-      "sudo tailscale up --authkey=${var.tailscaleMainAuthKey} --hostname=ezbookkeeping",
+      "sudo tailscale up --authkey=${var.tailscaleMainAuthKey} --hostname=ezbookkeeping --ssh",
 
       "mkdir -p /home/${var.adminUser}/data/ezbk",
       "sudo docker run --name ezbookkeeping -d -p 8080:8080 -v /home/${var.adminUser}/data/ezbk:/var/lib/ezbk:rw mayswind/ezbookkeeping:latest-snapshot"
