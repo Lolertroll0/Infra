@@ -143,7 +143,7 @@ resource "docker_container" "vaultWarden" {
     null_resource.setup_OrchestratorEnvironment
   ]
   env = [
-    "SIGNUPS_ALLOWED=yes",
+    "SIGNUPS_ALLOWED=false",
     "EMERGENCY_ACCESS_ALLOWED=true",
     "PASSWORD_HINTS_ALLOWED=false"
   ]
