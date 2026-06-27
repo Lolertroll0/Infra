@@ -1,0 +1,22 @@
+name: Regenerate Tailscale Keys
+
+on: 
+  workflow_dispatch:
+
+jobs: 
+  regenerate-tailscale-keys:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Make script executable
+        run: chmod +x ./scripts/regenerate-key.sh
+
+      - name: Regenerate Tailscale keys
+        run: ./scripts/regenerate-key.sh
+        env:
+          TS_OAUTH_CLIENT_ID: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          TS_OAUTH_CLIENT_SECRET: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
+          GH_TOKEN: ${{ secrets.REGENERATION_TOKEN }}
+      

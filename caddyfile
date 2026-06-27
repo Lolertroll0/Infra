@@ -1,0 +1,21 @@
+{
+	servers {
+		trusted_proxies static 127.0.0.1
+	}
+}
+
+http://vaultwarden.${tailnet} {
+	reverse_proxy vaultwarden:80
+}
+
+http://uptime-kuma.${tailnet} {
+	reverse_proxy uptimeKuma:3001
+}
+
+http://homeassistant.${tailnet} {
+	reverse_proxy homeassistant-1.${tailnet}:8123
+}
+
+http://ezbk.${tailnet} {
+	reverse_proxy ezbookkeeping.${tailnet}:8080
+}

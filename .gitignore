@@ -1,0 +1,34 @@
+# Standard Terraform ignore patterns
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+!prod.auto.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+.terraform.lock.hcl
+
+# Project specific
+template.md
+.vscode
+local.tfvars
+ubuntu*.log
+.vagrant
+tfplan.log
+errlog.log
+tfplan
+pretfplan
+
+# Environment Secrets
+.env
+*.tfvars
+.terraform.lock.hcl
+attach-usb.ps1
+.terraform.lock.hcl
+update-handoff.ps1
+small-deploy.ps1
