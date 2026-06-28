@@ -83,8 +83,10 @@ Build a professional-grade, **distributed home lab** managed entirely via **Infr
   - Active Tailscale connections have been verified for the orchestrator (`homeserver`), `ezbookkeeping-1`, and `voicepipeline`. Offline duplicate devices have been completely purged from the tailnet.
   - Deployed the `duplicati` container on the orchestrator node with port `8200` exposed and read-only bind mounts to the `uptimeKuma` and `vaultwarden` host data directories for secure automated backups.
   - Resolved connection blocking from Home Assistant OS to the Voice Pipeline node by correcting the case mismatch of the `tag:mainServer` tag, renaming it to lowercase `tag:mainserver` across the policy file and key generation scripts.
-  - The physical USB passthrough `8087:0a2a` is successfully attached to the running `HomeAssistantOS` VM (vmid 104) on the Proxmox host.
-  - Imported and synchronized the Tailscale ACL policy (`tailscale_acl.home_mesh_policy`) into the Terraform state to avoid duplicate write conflicts.
+  - Modified [mainServer.tf](file:///C:/Users/lolertroll/Infra/mainServer.tf) to map the correct persistent volume paths for the `ezBookKeeping` container (`/ezbookkeeping/data`, `/ezbookkeeping/storage`, `/ezbookkeeping/log`, `/ezbookkeeping/conf`), preventing database and file uploads from being lost on container recreation.
+  - Enforced target directory permission ownership (`1000:1000`) inside the `setup_ezBookKeeping` VM provisioner to prevent database write permission failures.
+  - Restructured the CI/CD pipeline targeting `main` to run `plan` and `apply` sequentially in `deploy.yml`, solving the GitHub Actions cross-workflow artifact download constraint.
+  - Hardened CI/CD security by adopting keyless **Tailscale SSH** for runner authentication. Replaced static private key files inside [providers.tf](file:///c:/Users/lolertroll/Infra/providers.tf) with a dynamic `ssh_opts` configuration (allowing both local key files and keyless Tailscale SSH to coexist based on empty key path checks). Removed all 10+ SSH key secrets and agent configuration steps from GitHub Actions workflows.
 
 - **Day 0 Bootstrapping Strategy**
   - **Node IP Table (LAN/Bootstrap Phase)**:
@@ -190,8 +192,10 @@ This section lists actionable items to move the project toward a stable, profess
 ### CI/CD and automation
 
 - [x] Finalize GitHub Actions workflows:
-  - Plan-only on PR / branch.
-  - Manual or gated apply using the saved plan artifact.
+  - Plan-only on PR targeting `main` (posting plan diffs to PR comments).
+  - Sequential Plan and Apply on merge (push) to `main`.
+- [x] Migrate GitHub Actions runner to Tailscale SSH keyless authentication, simplifying workflow steps.
+- [ ] Delete deprecated SSH private/public key secrets from GitHub Repository Secrets settings.
 - [x] Wire `scripts/regenerate-key.sh` into a scheduled or on-demand workflow for Tailscale auth key rotation.
 - [x] Hook Terraform and rotation workflows into Discord or another notification sink for visibility.
 
@@ -258,6 +262,15 @@ This section captures key decisions and mental models that future agents should 
   - Devices on the tailnet that are expected to communicate under tag-based policies (such as the Home Assistant VM needing `tag:mainserver` access to Wyoming Voice nodes on `tag:voice`) **must** be authenticated using a pre-authorized, tag-configured auth key rather than a standard user login. User-authenticated nodes do not inherit tags, preventing the matches required by strict ACL policies.
   - **Tailscale ACL Tag Case-Sensitivity**: Tailscale tags are strictly case-sensitive. Device tags must match the casing defined and referenced in the ACL policy exactly. Using all-lowercase tags (e.g. `tag:mainserver`) is recommended to avoid silent authorization failures when devices register with lowercase tags.
   - **Backup Security / Read-Only Mounts**: Source directories mounted into backup containers like Duplicati should be mounted with `read_only = true` to protect live application data from accidental mutation or deletion.
+
+- **Environment Parity & Dynamic Provider Configuration**:
+  - By using Terraform's `concat` and conditional expressions, we can dynamically build the provider's `ssh_opts` depending on whether a local SSH key path variable is supplied. This allows developer environments (using local key files) and production CI/CD runners (connecting keylessly via Tailscale SSH) to share the exact same HCL code.
+
+- **Least Privilege and Keyless Access Control**:
+  - Relying on machine identity (Tailscale SSH) for CI/CD runners rather than uploading static private SSH keys to GitHub Secrets is an SRE best practice. It eliminates key rotation and management lifecycle overhead, while significantly reducing the repository's security attack surface.
+
+- **Docker Volume Mounts and Host Permissions**:
+  - If a host directory mapped in a Docker container volume does not exist when the container starts, the Docker daemon automatically creates it as `root:root`. If the container process runs as a non-root user (e.g. UID 1000), it will face permission denied issues. Pre-creating the directory with correct ownership (`1000:1000`) before starting the container resolves this.
 
 - **Learning focus**
   - The owner is using this project to learn "real" patterns: multi-node infra, secure networking, IaC, SRE practices, CI/CD, and recovery.

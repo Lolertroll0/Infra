@@ -16,34 +16,6 @@ jobs:
         with:
           authkey: ${{ secrets.TAILSCALE_CI_AUTH_KEY }}
 
-      # 2. Configure SSH Keys for your distributed nodes
-      - name: Configure SSH Keys
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: |
-            ${{ secrets.PROXMOX_SSH_KEY }}
-            ${{ secrets.ORCHESTRATOR_SSH_KEY }}
-            ${{ secrets.MAIN_SERVER_SSH_KEY }}
-            ${{ secrets.VOICE_SSH_KEY }}
-            ${{ secrets.OTHER_SERVICES_SSH_KEY }}
-            ${{ secrets.HOME_ASSISTANT_SSH_KEY }}
-
-      # 2.1 Provision SSH Key files for Terraform provider (needed for -i flag and file() functions)
-      - name: Provision SSH Key Files
-        run: |
-          echo "${{ secrets.ORCHESTRATOR_SSH_KEY }}" > /tmp/orchestrator_key
-          echo "${{ secrets.ORCHESTRATOR_SSH_KEY_PUB }}" > /tmp/orchestrator_key.pub
-          echo "${{ secrets.VOICE_SSH_KEY }}" > /tmp/voice_key
-          echo "${{ secrets.VOICE_SSH_KEY_PUB }}" > /tmp/voice_key.pub
-          echo "${{ secrets.MAIN_SERVER_SSH_KEY }}" > /tmp/main_key
-          echo "${{ secrets.MAIN_SERVER_SSH_KEY_PUB }}" > /tmp/main_key.pub
-          echo "${{ secrets.OTHER_SERVICES_SSH_KEY }}" > /tmp/other_services_key
-          echo "${{ secrets.OTHER_SERVICES_SSH_KEY_PUB }}" > /tmp/other_services_key.pub
-          echo "${{ secrets.HOME_ASSISTANT_SSH_KEY }}" > /tmp/home_assistant_key
-          echo "${{ secrets.HOME_ASSISTANT_SSH_KEY_PUB }}" > /tmp/home_assistant_key.pub
-
-          chmod 600 /tmp/orchestrator_key /tmp/voice_key /tmp/main_key /tmp/other_services_key /tmp/home_assistant_key
-
       # 3. Terraform Operations
       - name: Terraform Init
         run: terraform init
@@ -72,16 +44,16 @@ jobs:
           TF_VAR_tailscaleMainAuthKey: ${{ secrets.TAILSCALE_MAIN_AUTH_KEY }}
           TF_VAR_tailscaleVoiceAuthKey: ${{ secrets.TAILSCALE_VOICE_AUTH_KEY }}
 
-          TF_VAR_mainKey: "/tmp/main_key"
-          TF_VAR_mainKeyPublic: "/tmp/main_key.pub"
-          TF_VAR_orchestratorKey: "/tmp/orchestrator_key"
-          TF_VAR_orchestratorKeyPublic: "/tmp/orchestrator_key.pub"
-          TF_VAR_voiceKey: "/tmp/voice_key"
-          TF_VAR_voiceKeyPublic: "/tmp/voice_key.pub"
-          TF_VAR_otherServicesKey: "/tmp/other_services_key"
-          TF_VAR_otherServicesKeyPublic: "/tmp/other_services_key.pub"
-          TF_VAR_homeAssistantKey: "/tmp/home_assistant_key"
-          TF_VAR_homeAssistantKeyPublic: "/tmp/home_assistant_key.pub"
+          TF_VAR_mainKey: ""
+          TF_VAR_mainKeyPublic: ""
+          TF_VAR_orchestratorKey: ""
+          TF_VAR_orchestratorKeyPublic: ""
+          TF_VAR_voiceKey: ""
+          TF_VAR_voiceKeyPublic: ""
+          TF_VAR_otherServicesKey: ""
+          TF_VAR_otherServicesKeyPublic: ""
+          TF_VAR_homeAssistantKey: ""
+          TF_VAR_homeAssistantKeyPublic: ""
 
           TF_VAR_proxmoxAPI: ${{ secrets.PROXMOX_API_URL }}
           TF_VAR_proxmoxTokenId: ${{ secrets.PROXMOX_TOKEN_ID }}
@@ -107,16 +79,10 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `\`\`\`terraform\n${process.env.TF_PLAN}\n\`\``
+              body: `\`\`\`terraform\n${process.env.TF_PLAN}\n\`\`\``
             })
-
-      - name: Upload Terraform Plan Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan
-          path: tfplan
-          retention-days: 1
 
       # 4. Logout from Tailnet
       - name: logout from tailnet
         run: tailscale logout
+

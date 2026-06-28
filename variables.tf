@@ -136,6 +136,11 @@ variable "tailscaleVoiceAuthKey" {
   sensitive   = true
   description = "Tailscale auth key for the Voice node"
 }
+variable "tailscaleCIEphimeralAuthKey" {
+  type        = string
+  sensitive   = true
+  description = "Tailscale auth key for the CI node/runner"
+}
 
 # Proxmox variables
 # These variables are used to authenticate with Proxmox
