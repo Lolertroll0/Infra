@@ -28,24 +28,24 @@ terraform {
 provider "docker" {
   alias    = "mainServer"
   host     = "ssh://${var.adminUser}@${var.mainServer}:22"
-  ssh_opts = ["-i", var.mainKey, "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"]
+  ssh_opts = concat(var.mainKey != "" ? ["-i", var.mainKey] : [], ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"])
 }
 provider "docker" {
   alias    = "orchestrator"
   host     = "ssh://${var.adminUser}@${var.orchestrator}:22"
-  ssh_opts = ["-i", var.orchestratorKey, "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"]
+  ssh_opts = concat(var.orchestratorKey != "" ? ["-i", var.orchestratorKey] : [], ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"])
 }
 
 provider "docker" {
   alias    = "voicePipeline"
   host     = "ssh://${var.adminUser}@${var.voicePipeline}:22"
-  ssh_opts = ["-i", var.voiceKey, "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"]
+  ssh_opts = concat(var.voiceKey != "" ? ["-i", var.voiceKey] : [], ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"])
 }
 
 provider "docker" {
   alias    = "otherServices"
   host     = "ssh://${var.adminUser}@${var.otherServicesIP}:22"
-  ssh_opts = ["-i", var.otherServicesKey, "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"]
+  ssh_opts = concat(var.otherServicesKey != "" ? ["-i", var.otherServicesKey] : [], ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"])
 }
 
 provider "proxmox" {

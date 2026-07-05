@@ -7,6 +7,44 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      TF_VAR_mainServer: ${{ secrets.MAIN_SERVER_URL }}
+      TF_VAR_orchestrator: ${{ secrets.ORCHESTRATOR_URL }}
+      TF_VAR_voicePipeline: ${{ secrets.VOICE_PIPELINE_URL }}
+      TF_VAR_otherServicesIP: ${{ secrets.OTHER_SERVICES_IP }}
+      TF_VAR_homeAssistantIP: ${{ secrets.HOME_ASSISTANT_IP }}
+      TF_VAR_networkGateway: ${{ secrets.NETWORK_GATEWAY }}
+
+      TF_VAR_adminUser: ${{ secrets.ADMIN_USER }}
+      TF_VAR_adminEmail: ${{ secrets.ADMIN_EMAIL }}
+      TF_VAR_adminPassword: ${{ secrets.ADMIN_PASSWORD }}
+
+      TF_VAR_tailscaleSecret: ${{ secrets.TAILSCALE_API_KEY }}
+      TF_VAR_tailnet: ${{ secrets.TAILNET }}
+
+      TF_VAR_tailscaleOrchestratorAuthKey: ${{ secrets.TAILSCALE_ORCHESTRATOR_AUTH_KEY }}
+      TF_VAR_tailscaleMainAuthKey: ${{ secrets.TAILSCALE_MAIN_AUTH_KEY }}
+      TF_VAR_tailscaleVoiceAuthKey: ${{ secrets.TAILSCALE_VOICE_AUTH_KEY }}
+
+      TF_VAR_mainKey: ""
+      TF_VAR_mainKeyPublic: ""
+      TF_VAR_orchestratorKey: ""
+      TF_VAR_orchestratorKeyPublic: ""
+      TF_VAR_voiceKey: ""
+      TF_VAR_voiceKeyPublic: ""
+      TF_VAR_otherServicesKey: ""
+      TF_VAR_otherServicesKeyPublic: ""
+      TF_VAR_homeAssistantKey: ""
+      TF_VAR_homeAssistantKeyPublic: ""
+
+      TF_VAR_proxmoxAPI: ${{ secrets.PROXMOX_API_URL }}
+      TF_VAR_proxmoxTokenId: ${{ secrets.PROXMOX_TOKEN_ID }}
+      TF_VAR_proxmoxSecret: ${{ secrets.PROXMOX_SECRET }}
+      TF_VAR_haosTemplate: ${{ secrets.HAOS_TEMPLATE }}
+      TF_VAR_ezbkTemplate: ${{ secrets.EZBK_TEMPLATE }}
+      TF_VAR_proxmoxStorage: ${{ secrets.PROXMOX_STORAGE }}
+      TF_VAR_homeAssistantUSB: ${{ secrets.HOME_ASSISTANT_USB }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,85 +59,19 @@ jobs:
       - name: Connect to Tailnet
         uses: tailscale/github-action@v2
         with:
-          authkey: ${{ secrets.TAILSCALE_CI_AUTH_KEY }}
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
+          tags: tag:ci
 
-      # 2. Configure SSH Keys for your distributed nodes
-      - name: Configure SSH Keys
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: |
-            ${{ secrets.PROXMOX_SSH_KEY }}
-            ${{ secrets.ORCHESTRATOR_SSH_KEY }}
-            ${{ secrets.MAIN_SERVER_SSH_KEY }}
-            ${{ secrets.VOICE_SSH_KEY }}
-            ${{ secrets.OTHER_SERVICES_SSH_KEY }}
-            ${{ secrets.HOME_ASSISTANT_SSH_KEY }}
-
-      # 2.1 Provision SSH Key files for Terraform provider (needed for -i flag)
-      - name: Provision SSH Key Files
-        run: |
-          echo "${{ secrets.ORCHESTRATOR_SSH_KEY }}" > /tmp/orchestrator_key
-          echo "${{ secrets.ORCHESTRATOR_SSH_KEY_PUB }}" > /tmp/orchestrator_key.pub
-          echo "${{ secrets.VOICE_SSH_KEY }}" > /tmp/voice_key
-          echo "${{ secrets.VOICE_SSH_KEY_PUB }}" > /tmp/voice_key.pub
-          echo "${{ secrets.MAIN_SERVER_SSH_KEY }}" > /tmp/main_key
-          echo "${{ secrets.MAIN_SERVER_SSH_KEY_PUB }}" > /tmp/main_key.pub
-          echo "${{ secrets.OTHER_SERVICES_SSH_KEY }}" > /tmp/other_services_key
-          echo "${{ secrets.OTHER_SERVICES_SSH_KEY_PUB }}" > /tmp/other_services_key.pub
-          echo "${{ secrets.HOME_ASSISTANT_SSH_KEY }}" > /tmp/home_assistant_key
-          echo "${{ secrets.HOME_ASSISTANT_SSH_KEY_PUB }}" > /tmp/home_assistant_key.pub
-
-          chmod 600 /tmp/orchestrator_key /tmp/voice_key /tmp/main_key /tmp/other_services_key /tmp/home_assistant_key
-
-      # 3. Download Plan
-      - name: Download Plan
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan
-
-      # 3. Terraform Operations
+      # 2. Terraform Operations
       - name: Terraform Init
         run: terraform init
 
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
       - name: Terraform Apply
-        run: terraform apply tfplan 2>&1 > apply.log
-        env:
-          TF_VAR_mainServer: ${{ secrets.MAIN_SERVER_URL }}
-          TF_VAR_orchestrator: ${{ secrets.ORCHESTRATOR_URL }}
-          TF_VAR_voicePipeline: ${{ secrets.VOICE_PIPELINE_URL }}
-          TF_VAR_otherServicesIP: ${{ secrets.OTHER_SERVICES_IP }}
-          TF_VAR_homeAssistantIP: ${{ secrets.HOME_ASSISTANT_IP }}
-          TF_VAR_networkGateway: ${{ secrets.NETWORK_GATEWAY }}
-
-          TF_VAR_adminUser: ${{ secrets.ADMIN_USER }}
-          TF_VAR_adminEmail: ${{ secrets.ADMIN_EMAIL }}
-          TF_VAR_adminPassword: ${{ secrets.ADMIN_PASSWORD }}
-
-          TF_VAR_tailscaleSecret: ${{ secrets.TAILSCALE_API_KEY }}
-          TF_VAR_tailnet: ${{ secrets.TAILNET }}
-
-          TF_VAR_tailscaleOrchestratorAuthKey: ${{ secrets.TAILSCALE_ORCHESTRATOR_AUTH_KEY }}
-          TF_VAR_tailscaleMainAuthKey: ${{ secrets.TAILSCALE_MAIN_AUTH_KEY }}
-          TF_VAR_tailscaleVoiceAuthKey: ${{ secrets.TAILSCALE_VOICE_AUTH_KEY }}
-
-          TF_VAR_mainKey: "/tmp/main_key"
-          TF_VAR_mainKeyPublic: "/tmp/main_key.pub"
-          TF_VAR_orchestratorKey: "/tmp/orchestrator_key"
-          TF_VAR_orchestratorKeyPublic: "/tmp/orchestrator_key.pub"
-          TF_VAR_voiceKey: "/tmp/voice_key"
-          TF_VAR_voiceKeyPublic: "/tmp/voice_key.pub"
-          TF_VAR_otherServicesKey: "/tmp/other_services_key"
-          TF_VAR_otherServicesKeyPublic: "/tmp/other_services_key.pub"
-          TF_VAR_homeAssistantKey: "/tmp/home_assistant_key"
-          TF_VAR_homeAssistantKeyPublic: "/tmp/home_assistant_key.pub"
-
-          TF_VAR_proxmoxAPI: ${{ secrets.PROXMOX_API_URL }}
-          TF_VAR_proxmoxTokenId: ${{ secrets.PROXMOX_TOKEN_ID }}
-          TF_VAR_proxmoxSecret: ${{ secrets.PROXMOX_SECRET }}
-          TF_VAR_haosTemplate: ${{ secrets.HAOS_TEMPLATE }}
-          TF_VAR_ezbkTemplate: ${{ secrets.EZBK_TEMPLATE }}
-          TF_VAR_proxmoxStorage: ${{ secrets.PROXMOX_STORAGE }}
-          TF_VAR_homeAssistantUSB: ${{ secrets.HOME_ASSISTANT_USB }}
+        run: terraform apply -auto-approve tfplan 2>&1 > apply.log
 
       - name: Capture Failure Logs
         if: failure()
@@ -119,7 +91,7 @@ jobs:
           name: terraform-error-log
           path: error_log.txt
 
-      # 4. Observability: Send success message to Discord
+      # 3. Observability: Send messages to Discord
       - name: Send success message to discord
         if: success()
         uses: tsickert/discord-webhook@v6.0.0
@@ -136,6 +108,6 @@ jobs:
             **Infrastructure Deployment FAILED** ❌
             [View Full Error Log](${{ steps.artifact-upload.outputs.artifact-url }})
 
-      # 5. Logout from Tailnet
+      # 4. Logout from Tailnet
       - name: logout from tailnet
         run: tailscale logout

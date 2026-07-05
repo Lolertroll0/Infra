@@ -10,4 +10,7 @@ Deep Scanning: Use @security-auditor and any available local security integratio
 
 Remediation Loop: If high or critical vulnerabilities are found, do not just report them. Enter a remediation loop: analyze the finding, implement a secure fix, and verify the fix by re-running the scan.
 
+Prior History Check: Before starting the security assessment, read the previous security validation report in [security_validation_report.md](file:///c:/Users/lolertroll/Infra/.agents/security_validation_report.md) (if it exists). Build upon the previously identified findings, accepted risks, and remediation history to contextualize the new scan.
+
 Gating & Artifacts: Generate a security_validation_report.md artifact detailing the scan results, any auto-remediated issues, and any outstanding risks. Conclude the report with a strict GO / NO-GO recommendation for merging.
+

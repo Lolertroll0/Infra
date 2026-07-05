@@ -9,7 +9,7 @@
 
 # Configuration: Mapping Tailscale Tags to GitHub Secret Names
 declare -A NODES=(
-  ["tag:orchestrator"]="TAILSCALE_RP4_AUTH_KEY"
+  ["tag:orchestrator"]="TAILSCALE_ORCHESTRATOR_AUTH_KEY"
   ["tag:mainserver"]="TAILSCALE_MAIN_AUTH_KEY"
   ["tag:voice"]="TAILSCALE_VOICE_AUTH_KEY"
   ["tag:ci"]="TAILSCALE_CI_AUTH_KEY"

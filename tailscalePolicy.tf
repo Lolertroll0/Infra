@@ -16,6 +16,8 @@ resource "tailscale_acl" "home_mesh_policy" {
       "tag:mainserver"   = ["group:admin"],
       "tag:voice"        = ["group:admin"],
       "tag:consumer"     = ["group:admin"],
+      "tag:ci"           = ["group:admin"],
+      "tag:debug"        = ["group:admin"],
     },
 
     autoApprovers = {
@@ -23,7 +25,7 @@ resource "tailscale_acl" "home_mesh_policy" {
         "svc:vaultwarden"   = ["tag:orchestrator"]
         "svc:uptime-kuma"   = ["tag:orchestrator"]
         "svc:homeassistant" = ["tag:orchestrator"]
-        "svc:ezbk" = ["tag:orchestrator"]
+        "svc:ezbk"          = ["tag:orchestrator"]
       }
     },
 
@@ -37,8 +39,7 @@ resource "tailscale_acl" "home_mesh_policy" {
           "svc:vaultwarden:443",
           "svc:uptime-kuma:443",
           "svc:homeassistant:443",
-          "svc:ezbk:443",
-          "tag:mainserver:8080"
+          "svc:ezbk:443"
         ]
       },
 
@@ -46,8 +47,12 @@ resource "tailscale_acl" "home_mesh_policy" {
         action = "accept",
         src    = ["tag:orchestrator"],
         dst = [
-          "tag:mainserver:8123", # Home Assistant OS
-          "tag:mainserver:8080", # ezBookKeeping
+          "tag:mainserver:8123",   # Home Assistant OS
+          "tag:mainserver:8080",   # ezBookKeeping Backend
+          "svc:ezbk:443",          # ezBookKeeping Virtual Service
+          "svc:homeassistant:443", # Home Assistant OS Virtual Service
+          "svc:vaultwarden:443",   # Vaultwarden Virtual Service
+          "svc:uptime-kuma:443"    # Uptime Kuma Virtual Service
         ],
       },
 
@@ -71,13 +76,13 @@ resource "tailscale_acl" "home_mesh_policy" {
     ssh = [
       {
         action = "accept",
-        src    = ["group:admin"],
+        src    = ["tag:ci", "group:admin"],
         dst = [
           "tag:orchestrator",
           "tag:mainserver",
           "tag:voice"
         ],
-        users = ["root", "${var.adminUser}", "admin"],
+        users = ["${var.adminUser}"],
       },
     ],
 
