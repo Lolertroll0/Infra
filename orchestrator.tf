@@ -78,12 +78,13 @@ resource "docker_container" "uptimeKuma" {
   name     = "uptimeKuma"
   image    = docker_image.uptimeKuma.name
   restart  = "unless-stopped"
+  dns      = ["100.100.100.100"]
   networks_advanced {
     name = docker_network.orchestratorInternal.name
   }
 
   volumes {
-    container_path = "/data"
+    container_path = "/app/data"
     host_path      = "${local.data_dir}/uptimeKuma"
   }
   depends_on = [

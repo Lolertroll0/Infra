@@ -10,7 +10,7 @@ Build a professional-grade, **distributed home lab** managed entirely via **Infr
 
 - Practicing DevOps skills: Terraform, multi-provider setups (Proxmox, Docker, Tailscale), CI/CD with GitHub Actions.
 - Applying **Zero Trust** and secure networking using **Tailscale** (MagicDNS, ACLs, Tailscale SSH) and **Caddy** as an HTTPS reverse proxy.
-- Designing an architecture that spans **physical x86 (Proxmox)** and **ARM (Raspberry Pi)** nodes, with clear responsibility boundaries.
+- Designing an architecture that spans **physical x86 (Proxmox)** and dedicated x86 Mini PC nodes, with clear responsibility boundaries.
 - Implementing **SRE-style practices**: reproducible deployments, key rotation, controlled destroy behavior (e.g., Tailscale logout), and eventually backup/recovery workflows.
 - Using this home lab as a learning vehicle for moving from QA to DevOps/SRE engineering.
 
@@ -26,7 +26,7 @@ Build a professional-grade, **distributed home lab** managed entirely via **Infr
     - `ezBookKeeping` VM for running Dockerized ezBookKeeping.
   - Terraform manages VMs via the Proxmox provider and uses cloud-init for the ezBookKeeping VM.
 
-- **Orchestrator Node (Raspberry Pi 4)**
+- **Orchestrator Node (Mini PC / x86_64)**
   - Acts as the **HTTP(S) entry point** into the tailnet services.
   - Runs Docker with:
     - **Caddy** as a reverse proxy routing services via subdomain host headers.
@@ -62,7 +62,7 @@ Build a professional-grade, **distributed home lab** managed entirely via **Infr
     - `variables.tf`: all admin, MagicDNS, SSH, Tailscale, and Proxmox variables.
     - `local.auto.tfvars`: Local variables file containing credentials/tokens, node IPs, and SSH key paths (local only / gitignored).
     - `mainServer.tf`: Proxmox VMs and provisioning for ezBookKeeping.
-    - `rp4Orchestrator.tf`: orchestrator setup and containers.
+    - `orchestrator.tf`: orchestrator setup and containers.
     - `voicePipeline.tf`: voice node setup and containers.
     - `images.tf`: all Docker image resources.
     - `locals.tf`: centralized path patterns (`base_dir`, `data_dir`, `config_dir`).
@@ -78,7 +78,7 @@ Build a professional-grade, **distributed home lab** managed entirely via **Infr
 - **Deployment status**
   - All 23 infrastructure resources have been successfully destroyed and redeployed clean from scratch.
   - Tailscale keys for all nodes (`tag:orchestrator`, `tag:mainserver`, `tag:voice`) were regenerated using the Tailscale REST API and stored in `local.auto.tfvars`.
-  - Destroy provisioners in [mainServer.tf](file:///C:/Users/lolertroll/Infra/mainServer.tf#L148-L162), [rp4Orchestrator.tf](file:///C:/Users/lolertroll/Infra/rp4Orchestrator.tf#L40-L54), and [voicePipeline.tf](file:///C:/Users/lolertroll/Infra/voicePipeline.tf#L38-L52) have been refactored to use `jq` for robust device ID lookup (`jq -r '.Self.ID'`) and made resilient with `set +e` and `exit 0` to prevent blocker errors if a node is already logged out.
+  - Destroy provisioners in [mainServer.tf](file:///C:/Users/lolertroll/Infra/mainServer.tf#L148-L162), [orchestrator.tf](file:///C:/Users/lolertroll/Infra/orchestrator.tf#L40-L54), and [voicePipeline.tf](file:///C:/Users/lolertroll/Infra/voicePipeline.tf#L38-L52) have been refactored to use `jq` for robust device ID lookup (`jq -r '.Self.ID'`) and made resilient with `set +e` and `exit 0` to prevent blocker errors if a node is already logged out.
   - Pushed updated path-based routing definitions in the `Caddyfile` for `/homeassistant`, `/ezbk`, `/ollama`, `/whisper`, and `/piper` utilizing the correct DNS names (`homeassistant.local`, `ezbookkeeping.tailded50c.ts.net`, and `voicepipeline.tailded50c.ts.net`).
   - Active Tailscale connections have been verified for the orchestrator (`homeserver`), `ezbookkeeping-1`, and `voicepipeline`. Offline duplicate devices have been completely purged from the tailnet.
   - Deployed the `duplicati` container on the orchestrator node with port `8200` exposed and read-only bind mounts to the `uptimeKuma` and `vaultwarden` host data directories for secure automated backups.
@@ -87,13 +87,17 @@ Build a professional-grade, **distributed home lab** managed entirely via **Infr
   - Enforced target directory permission ownership (`1000:1000`) inside the `setup_ezBookKeeping` VM provisioner to prevent database write permission failures.
   - Restructured the CI/CD pipeline targeting `main` to run `plan` and `apply` sequentially in `deploy.yml`, solving the GitHub Actions cross-workflow artifact download constraint.
   - Hardened CI/CD security by adopting keyless **Tailscale SSH** for runner authentication. Replaced static private key files inside [providers.tf](file:///c:/Users/lolertroll/Infra/providers.tf) with a dynamic `ssh_opts` configuration (allowing both local key files and keyless Tailscale SSH to coexist based on empty key path checks). Removed all 10+ SSH key secrets and agent configuration steps from GitHub Actions workflows.
+  - Corrected [orchestrator.tf](file:///c:/Users/lolertroll/Infra/orchestrator.tf) to map the `uptimeKuma` container data path to `/app/data` (previously `/data`), securing persistence of monitoring history and databases across container replacements.
+  - Configured `uptimeKuma` with `dns = ["100.100.100.100"]` to allow resolution of private Tailscale MagicDNS (`*.ts.net`) addresses, fixing DNS lookup failures (`ENOTFOUND`).
+  - Restored backend access rule `"tag:mainserver:8080"` and added `"group:admin"` to Tailscale SSH permissions in [tailscalePolicy.tf](file:///c:/Users/lolertroll/Infra/tailscalePolicy.tf) to restore Caddy reverse proxy pathways and secure SSH management access.
+  - Resolved Tailscale API out-of-sync conflicts by removing the ACL resource from the local state database and re-importing the active console configurations.
 
 - **Day 0 Bootstrapping Strategy**
   - **Node IP Table (LAN/Bootstrap Phase)**:
     - Proxmox API & Host SSH: `192.168.1.100` (Gateway: `192.168.1.1`)
     - ezBookKeeping VM: `192.168.1.102` (via Docker `otherServices` provider)
     - HomeAssistantOS VM: `192.168.1.103`
-    - Orchestrator (Raspberry Pi 4): `192.168.1.25`
+    - Orchestrator (Mini PC): `192.168.1.25`
     - Voice & AI Pipeline Node: `192.168.1.16`
   - **SSH Keys Setup**:
     - Dedicated SSH keypairs created locally at `C:/Users/lolertroll/.ssh/` named `mainServer`, `orchestrator`, `voicePipeline`, `otherServices`, and `homeAssistant` (with matching `.pub` counterparts).
@@ -271,6 +275,10 @@ This section captures key decisions and mental models that future agents should 
 
 - **Docker Volume Mounts and Host Permissions**:
   - If a host directory mapped in a Docker container volume does not exist when the container starts, the Docker daemon automatically creates it as `root:root`. If the container process runs as a non-root user (e.g. UID 1000), it will face permission denied issues. Pre-creating the directory with correct ownership (`1000:1000`) before starting the container resolves this.
+  - For **Uptime Kuma**, the correct internal container path is `/app/data`. Mapping to `/data` results in configs being written to the ephemeral overlay, causing data loss on container replacements.
+
+- **Docker Container DNS Resolution on Tailnets**:
+  - Containers that need to query or monitor private Tailscale MagicDNS endpoints (like `*.ts.net`) must have `dns = ["100.100.100.100"]` explicitly declared. Default docker DNS fallback (like `8.8.8.8`) will result in `NXDOMAIN` (`ENOTFOUND`) resolution failures since they lack authority over the private tailnet.
 
 - **Learning focus**
   - The owner is using this project to learn "real" patterns: multi-node infra, secure networking, IaC, SRE practices, CI/CD, and recovery.
@@ -287,7 +295,7 @@ This section captures key decisions and mental models that future agents should 
 - **Learning goals through this project**
   - Gain hands-on experience with:
     - Terraform across multiple providers (Proxmox, Docker, Tailscale).
-    - Designing and operating a small but realistic distributed system (x86 + ARM nodes).
+    - Designing and operating a small but realistic distributed system (multiple x86 nodes).
     - Zero trust networking, access control, and reverse proxying.
     - CI/CD workflows for infrastructure (plan/apply, secret management, key rotation).
     - SRE practices: idempotent provisioning, observability, backups, and disaster recovery.

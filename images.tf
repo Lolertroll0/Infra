@@ -42,7 +42,7 @@ resource "docker_image" "ezbookkeeping" {
 }
 
 resource "docker_image" "duplicati" {
-  provider   = docker.orchestrator
+  provider = docker.orchestrator
   # Note: duplicati/duplicati uses complex beta tag naming (e.g. 2.0.8.1_beta_2024-05-07).
   # We use latest here to track stable/beta major 2, or you can manually pin to a specific date tag.
   name       = "duplicati/duplicati:latest"

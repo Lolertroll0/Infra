@@ -4,7 +4,7 @@ This repository contains the Terraform configuration for a professional-grade, d
 
 ## 🚀 Project Overview & Current State
 
-The project has transitioned from a simulated Vagrant environment to a **Physical Hardware Deployment**. The architecture is designed for high security, isolation, and automated observability, running across physical x86 hardware (Proxmox) and ARM devices (Raspberry Pi).
+The project has transitioned from a simulated Vagrant environment to a **Physical Hardware Deployment**. The architecture is designed for high security, isolation, and automated observability, running across physical x86 hardware (Proxmox host and dedicated mini PC).
 
 ### 🛠️ Technologies Used
 *   **Infrastructure as Code:** Terraform
@@ -20,7 +20,7 @@ The infrastructure is logically divided into three specialized environments:
 1.  **Main Server (Proxmox / x86_64)**:
     *   **Home Assistant OS (HAOS)**: The heart of home automation, running as a dedicated appliance.
     *   **ezBookKeeping**: A financial tracking suite running in a Debian-based Docker container.
-2.  **Orchestrator Node (Raspberry Pi 4)**:
+2.  **Orchestrator Node (Mini PC / x86_64)**:
     *   **Caddy Proxy**: Acts as the gateway, routing `*.ts.net` MagicDNS traffic to internal services via HTTP/HTTPS.
     *   **Uptime Kuma**: Real-time monitoring and heartbeat tracking for all nodes.
     *   **Vaultwarden**: Self-hosted Bitwarden-compatible password management.
@@ -58,7 +58,7 @@ The project uses **GitHub Actions** for fully automated, predictable deployments
 *   `providers.tf`: Definition of Docker, Proxmox, and Tailscale providers.
 *   `variables.tf`: Centrally managed variables with enhanced descriptions.
 *   `mainServer.tf`: Proxmox VM definitions and Cloud-Init provisioning.
-*   `rp4Orchestrator.tf`: Management services and Caddy configuration.
+*   `orchestrator.tf`: Management services and Caddy configuration.
 *   `voicePipeline.tf`: AI and Voice processing stack.
 *   `caddyfile`: Reverse proxy rules with Tailnet placeholder substitution.
 *   `env.template`: Master list of required environment variables and secrets.

@@ -8,7 +8,7 @@ This report evaluates the security posture of the infrastructure codebase after 
 
 | Category | Finding | Severity | Status |
 | :--- | :--- | :--- | :--- |
-| **Elevation of Privilege** | Vaultwarden public registration is allowed (`SIGNUPS_ALLOWED=yes`) | **High** | **Remediated** (Disabled in `rp4Orchestrator.tf`) |
+| **Elevation of Privilege** | Vaultwarden public registration is allowed (`SIGNUPS_ALLOWED=yes`) | **High** | **Remediated** (Disabled in `orchestrator.tf`) |
 | **Tampering** | Mutable Docker image tags (`latest`, `:alpine`) used in configs | **Medium** | **Remediated** (Pinned in `images.tf`) |
 | **Tampering** | Incorrect ezBookKeeping volumes risk data loss | **Medium** | **Remediated** (Mapped to `/ezbookkeeping/data` and `/ezbookkeeping/storage` in `mainServer.tf`) |
 | **Information Disclosure** | Plaintext `tailscaleSecret` stored in Terraform state triggers | **Medium** | Accepted Risk (Required for persistent node cleanup on destroy) |
@@ -40,7 +40,7 @@ All critical, high, and medium severity vulnerabilities have been remediated or 
     *   Verified that no hardcoded credentials remain in the repository files (all real values are replaced with `<REDACTED>`).
 
 ### Elevation of Privilege (Remediated)
-*   **Vaultwarden Registrations**: Public signups are disabled (`SIGNUPS_ALLOWED=false` in `rp4Orchestrator.tf`), preventing unauthorized users from creating database accounts.
+*   **Vaultwarden Registrations**: Public signups are disabled (`SIGNUPS_ALLOWED=false` in `orchestrator.tf`), preventing unauthorized users from creating database accounts.
 
 ---
 
