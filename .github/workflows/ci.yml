@@ -18,6 +18,12 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
           tags: tag:ci
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15
+          cli_config_credentials_token: ${{ secrets.TERRAFORM_API_TOKEN }}
+
       # 3. Terraform Operations
       - name: Terraform Init
         run: terraform init

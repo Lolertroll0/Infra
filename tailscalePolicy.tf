@@ -8,7 +8,7 @@ resource "tailscale_acl" "home_mesh_policy" {
     ],
 
     groups = {
-      "group:admin" = ["${var.adminEmail}"],
+      "group:admin" = ["${var.adminEmail}", "averagelolertroll@gmail.com", "lolertroll@${var.tailnet}", "homeserver@${var.tailnet}", "voicepipeline@${var.tailnet}", "ezbookkeeping@${var.tailnet}"],
     },
 
     tagOwners = {
@@ -36,6 +36,8 @@ resource "tailscale_acl" "home_mesh_policy" {
         src    = ["tag:consumer"]
         dst = [
           "tag:orchestrator:*",
+          "tag:mainserver:22",
+          "tag:voice:22",
           "svc:vaultwarden:443",
           "svc:uptime-kuma:443",
           "svc:homeassistant:443",
@@ -76,13 +78,16 @@ resource "tailscale_acl" "home_mesh_policy" {
     ssh = [
       {
         action = "accept",
-        src    = ["tag:ci", "group:admin"],
+        src    = ["tag:orchestrator", "tag:mainserver", "tag:voice", "tag:consumer", "tag:ci", "tag:debug", "group:admin", "autogroup:admin", "autogroup:member"],
         dst = [
           "tag:orchestrator",
           "tag:mainserver",
-          "tag:voice"
+          "tag:voice",
+          "tag:consumer",
+          "tag:ci",
+          "tag:debug"
         ],
-        users = ["${var.adminUser}"],
+        users = ["${var.adminUser}", "root"],
       },
     ],
 

@@ -91,6 +91,7 @@ Build a professional-grade, **distributed home lab** managed entirely via **Infr
   - Configured `uptimeKuma` with `dns = ["100.100.100.100"]` to allow resolution of private Tailscale MagicDNS (`*.ts.net`) addresses, fixing DNS lookup failures (`ENOTFOUND`).
   - Restored backend access rule `"tag:mainserver:8080"` and added `"group:admin"` to Tailscale SSH permissions in [tailscalePolicy.tf](file:///c:/Users/lolertroll/Infra/tailscalePolicy.tf) to restore Caddy reverse proxy pathways and secure SSH management access.
   - Resolved Tailscale API out-of-sync conflicts by removing the ACL resource from the local state database and re-importing the active console configurations.
+  - Migrated Docker providers to connect keylessly over identity-based Tailscale SSH by resolving local developer ACL access on `tag:consumer` and `group:admin`. All docker providers successfully connect via MagicDNS hostnames instead of LAN IPs.
 
 - **Day 0 Bootstrapping Strategy**
   - **Node IP Table (LAN/Bootstrap Phase)**:
