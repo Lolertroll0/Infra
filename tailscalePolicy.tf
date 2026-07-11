@@ -32,6 +32,18 @@ resource "tailscale_acl" "home_mesh_policy" {
     acls = [
 
       {
+        action = "accept",
+        src    = ["tag:ci"],
+        dst = [
+          "tag:orchestrator:22",
+          "tag:mainserver:22",
+          "tag:voice:22",
+          "tag:mainserver:8006",
+          "tag:mainserver:22"
+        ]
+      },
+
+      {
         action = "accept"
         src    = ["tag:consumer"]
         dst = [
