@@ -39,7 +39,7 @@ resource "null_resource" "setup_OrchestratorEnvironment" {
       type        = "ssh"
       host        = var.orchestrator
       user        = var.adminUser
-      private_key = file(var.orchestratorKey)
+      private_key = var.orchestratorKey != "" ? file(var.orchestratorKey) : null
       timeout     = "10m"
     }
   }
@@ -56,7 +56,7 @@ resource "null_resource" "setup_OrchestratorEnvironment" {
       type        = "ssh"
       host        = self.triggers.host_ip
       user        = self.triggers.adminUser
-      private_key = file(self.triggers.orchestratorKey)
+      private_key = self.triggers.orchestratorKey != "" ? file(self.triggers.orchestratorKey) : null
       timeout     = "5m"
     }
   }
@@ -68,7 +68,7 @@ resource "null_resource" "setup_OrchestratorEnvironment" {
       type        = "ssh"
       host        = var.orchestrator
       user        = var.adminUser
-      private_key = file(var.orchestratorKey)
+      private_key = var.orchestratorKey != "" ? file(var.orchestratorKey) : null
       timeout     = "5m"
     }
   }

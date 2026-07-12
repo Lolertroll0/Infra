@@ -141,7 +141,7 @@ resource "null_resource" "setup_ezBookKeeping" {
       # If using DHCP, Proxmox provider returns the IP in default_ipv4_address
       host        = var.otherServicesIP
       user        = var.adminUser
-      private_key = file(var.otherServicesKey)
+      private_key = var.otherServicesKey != "" ? file(var.otherServicesKey) : null
       timeout     = "10m"
     }
   }
@@ -159,7 +159,7 @@ resource "null_resource" "setup_ezBookKeeping" {
       type        = "ssh"
       host        = self.triggers.host_ip
       user        = self.triggers.adminUser
-      private_key = file(self.triggers.otherServicesKey)
+      private_key = self.triggers.otherServicesKey != "" ? file(self.triggers.otherServicesKey) : null
       timeout     = "5m"
     }
   }
@@ -208,7 +208,7 @@ resource "null_resource" "attach_haos_usb" {
       type        = "ssh"
       host        = var.mainServer
       user        = "root"
-      private_key = file(var.mainKey)
+      private_key = var.mainKey != "" ? file(var.mainKey) : null
       timeout     = "5m"
     }
   }
