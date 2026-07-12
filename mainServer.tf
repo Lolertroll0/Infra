@@ -159,7 +159,7 @@ resource "null_resource" "setup_ezBookKeeping" {
       type        = "ssh"
       host        = self.triggers.host_ip
       user        = self.triggers.adminUser
-      private_key = self.triggers.otherServicesKey != "" ? file(self.triggers.otherServicesKey) : null
+      private_key = (self.triggers.otherServicesKey != "" && fileexists(self.triggers.otherServicesKey)) ? file(self.triggers.otherServicesKey) : null
       timeout     = "5m"
     }
   }
