@@ -22,7 +22,7 @@ resource "null_resource" "setup_OrchestratorEnvironment" {
       "sudo systemctl enable --now docker",
       "sudo usermod -aG docker ${var.adminUser}",
       "if command -v tailscale >/dev/null 2>&1; then echo \"Tailscale is already installed.\"; else curl -fsSL https://tailscale.com/install.sh | sudo sh; fi",
-      "sudo tailscale up --authkey=${var.tailscaleOrchestratorAuthKey} --ssh",
+      "sudo tailscale up --authkey=${var.tailscaleOrchestratorAuthKey} --ssh --accept-risk=lose-ssh",
       "sudo tailscale serve reset",
       "sudo tailscale serve --bg --service=svc:vaultwarden --https=443 http://127.0.0.1:80",
       "sudo tailscale serve --bg --service=svc:uptime-kuma --https=443 http://127.0.0.1:80",
