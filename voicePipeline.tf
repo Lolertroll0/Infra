@@ -30,7 +30,7 @@ resource "null_resource" "setup_voicePipelineEnvironment" {
       type        = "ssh"
       host        = var.voicePipeline
       user        = var.adminUser
-      private_key = file(var.voiceKey)
+      private_key = var.voiceKey != "" ? file(var.voiceKey) : null
       timeout     = "10m"
     }
   }
@@ -48,7 +48,7 @@ resource "null_resource" "setup_voicePipelineEnvironment" {
       type        = "ssh"
       host        = self.triggers.host_ip
       user        = self.triggers.adminUser
-      private_key = file(self.triggers.voiceKey)
+      private_key = self.triggers.voiceKey != "" ? file(self.triggers.voiceKey) : null
       timeout     = "10m"
     }
   }
