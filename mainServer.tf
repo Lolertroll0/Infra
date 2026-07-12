@@ -19,7 +19,7 @@ resource "proxmox_vm_qemu" "HomeAssistantOS" {
   cipassword = var.adminPassword
 
   # trimspace removes trailing newlines that corrupt Cloud-Init YAML injection
-  sshkeys = trimspace(file(var.homeAssistantKeyPublic))
+  sshkeys = var.homeAssistantKeyPublic != "" ? trimspace(file(var.homeAssistantKeyPublic)) : ""
 
   ipconfig0 = "ip=${var.homeAssistantIP}/24,gw=${var.networkGateway}"
 
@@ -81,7 +81,7 @@ resource "proxmox_vm_qemu" "ezBookKeeping" {
   cipassword = var.adminPassword
 
   # trimspace removes trailing newlines that corrupt Cloud-Init YAML injection
-  sshkeys = trimspace(file(var.otherServicesKeyPublic))
+  sshkeys = var.otherServicesKeyPublic != "" ? trimspace(file(var.otherServicesKeyPublic)) : ""
 
   ipconfig0 = "ip=${var.otherServicesIP}/24,gw=${var.networkGateway}"
 
