@@ -21,7 +21,7 @@ resource "null_resource" "setup_voicePipelineEnvironment" {
       "sudo systemctl enable --now docker",
       "sudo usermod -aG docker ${var.adminUser}",
       "if command -v tailscale >/dev/null 2>&1; then echo \"Tailscale is already installed.\"; else curl -fsSL https://tailscale.com/install.sh | sudo sh; fi",
-      "sudo tailscale up --authkey=${var.tailscaleVoiceAuthKey} --ssh",
+      "sudo tailscale up --authkey=${var.tailscaleVoiceAuthKey} --ssh --accept-risk=lose-ssh",
       "mkdir -p ${local.data_dir}/whisper/",
       "mkdir -p ${local.data_dir}/piper/",
       "mkdir -p ${local.data_dir}/ollama/"
