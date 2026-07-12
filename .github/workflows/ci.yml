@@ -90,5 +90,5 @@ jobs:
 
       # 4. Logout from Tailnet
       - name: logout from tailnet
-        run: tailscale logout
+        run: sudo tailscale logout
 
