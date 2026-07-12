@@ -83,7 +83,7 @@ resource "proxmox_vm_qemu" "ezBookKeeping" {
   # trimspace removes trailing newlines that corrupt Cloud-Init YAML injection
   sshkeys = var.otherServicesKeyPublic != "" ? trimspace(file(var.otherServicesKeyPublic)) : ""
 
-  ipconfig0 = "ip=${var.otherServicesIP}/24,gw=${var.networkGateway}"
+  ipconfig0 = "ip=192.168.1.102/24,gw=${var.networkGateway}"
 
   disk {
     slot    = "scsi0"
