@@ -56,7 +56,7 @@ resource "null_resource" "setup_OrchestratorEnvironment" {
       type        = "ssh"
       host        = self.triggers.host_ip
       user        = self.triggers.adminUser
-      private_key = self.triggers.orchestratorKey != "" ? file(self.triggers.orchestratorKey) : null
+      private_key = (self.triggers.orchestratorKey != "" && fileexists(self.triggers.orchestratorKey)) ? file(self.triggers.orchestratorKey) : null
       timeout     = "5m"
     }
   }

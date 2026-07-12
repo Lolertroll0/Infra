@@ -71,7 +71,6 @@ jobs:
           TF_VAR_proxmoxSecret: ${{ secrets.PROXMOX_SECRET }}
           TF_VAR_haosTemplate: ${{ secrets.HAOS_TEMPLATE }}
           TF_VAR_ezbkTemplate: ${{ secrets.EZBK_TEMPLATE }}
-          TF_VAR_proxmoxStorage: ${{ secrets.PROXMOX_STORAGE }}
           TF_VAR_homeAssistantUSB: ${{ secrets.HOME_ASSISTANT_USB }}
         run: |
           terraform plan -out=tfplan -no-color > terraform.log

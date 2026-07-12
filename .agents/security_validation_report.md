@@ -1,6 +1,6 @@
 # Security Validation Report
 
-This report evaluates the security posture of the infrastructure codebase after the staging branch updates, building upon the previous audit report.
+This report evaluates the security posture of the infrastructure codebase after the staging branch updates, specifically analyzing the latest CI/CD reliability and execution modifications.
 
 ---
 
@@ -16,38 +16,29 @@ This report evaluates the security posture of the infrastructure codebase after 
 | **Information Disclosure** | Plaintext admin password in Duplicati env var | **Low** | Acknowledged Risk |
 
 ### Merge Gating Recommendation: **GO** ✅
-All critical, high, and medium severity vulnerabilities have been remediated or secured. The staging modifications represent a significant security improvement (specifically the removal of SSH key secrets in favor of Tailscale SSH). The code is approved for merging.
+All critical, high, and medium severity vulnerabilities remain fully remediated or secured. The recent commits (conditionalizing public key reads and destroy provisioners with `fileexists()`, and letting the storage pool default to `local-lvm` by removing blank override variables) represent purely operational stability fixes. They present no new security risks, do not expose secrets, and maintain a secure infrastructure configuration. The staging modifications are approved for merging.
 
 ---
 
-## 1. STRIDE Threat Assessment
+## 1. STRIDE Threat Assessment of New Diffs
 
-### Spoofing (Hardened)
-*   **Keyless CI/CD Runner Connection**: Previously, we identified that the Docker provider disabled host key verification (`StrictHostKeyChecking=no`), posing a spoofing risk.
-    *   *Remediation*: We migrated the GitHub Actions runner to **Tailscale SSH**. By doing so, SSH sessions are authenticated and encrypted via your secure Tailscale tailnet. The runner (`tag:ci`) connects to target hosts using its machine identity, mitigating local network spoofing or MITM risks for CI/CD operations.
+### Spoofing / Tampering (Low Risk - Unchanged)
+*   **Storage Pools Configuration**: Removing `TF_VAR_proxmoxStorage` from GHA environment configurations forces the runner to fall back to the default pool name (`local-lvm`) defined in `variables.tf`. This aligns exactly with the storage pool used on the local hypervisor and poses no tampering or configuration spoofing risk.
 
-### Tampering (Remediated)
-*   **Docker Images**: Pinned Caddy to `caddy:2.7.6-alpine` and documented unpinnable community images (`thelocallab/ollama-openwebui:latest`).
-*   **Data Persistence**: The volume mapping for `ezbookkeeping` was corrected to write configuration, database files, and media to host directories, with host folder ownership restricted to `1000:1000` via VM provisioner scripts. This ensures user database edits are preserved across container updates and protected from unauthorized local modification.
-
-### Repudiation (Low Risk - Hardened)
-*   **Audit Logging**: The adoption of Tailscale SSH means that all session connections, authentications, and shell actions performed by the GitHub runner (`tag:ci`) are audited and recorded in the Tailscale Admin Console log, providing secure, centralized access trails.
-
-### Information Disclosure (Low Risk - Verified Secure)
-*   **Zero Secret Leaks in CI/CD**:
-    *   Removed `webfactory/ssh-agent` and all SSH private/public key variables from the GitHub workflows.
-    *   Updated `providers.tf` to use dynamic `ssh_opts` and set GHA private key path variables to `""`.
-    *   Verified that no hardcoded credentials remain in the repository files (all real values are replaced with `<REDACTED>`).
-
-### Elevation of Privilege (Remediated)
-*   **Vaultwarden Registrations**: Public signups are disabled (`SIGNUPS_ALLOWED=false` in `orchestrator.tf`), preventing unauthorized users from creating database accounts.
+### Information Disclosure (Hardened)
+*   **GHA Runner Key Resolution**: During the plan phase of pull requests, the runner had been failing when attempting to evaluate absolute local developer key paths stored in the state triggers map (`self.triggers.*`).
+    *   *Remediation*: We refactored all destroy-time connection blocks to evaluate both non-emptiness and presence via the `fileexists()` function:
+        ```hcl
+        private_key = (self.triggers.voiceKey != "" && fileexists(self.triggers.voiceKey)) ? file(self.triggers.voiceKey) : null
+        ```
+    *   This prevents the GHA runner from attempting to read non-existent paths, resolving plan-time validation exceptions and avoiding verbose stack-trace information disclosure in runner execution logs.
 
 ---
 
 ## 2. Scan Summary & Gating Status
 
-*   **Vulnerability Scanner (Semgrep/Static Audit)**: Clean. No hardcoded credentials detected in the codebase (apart from gitignored `local.auto.tfvars`).
+*   **Vulnerability Scanner (Semgrep/Static Audit)**: Clean. No hardcoded credentials detected in the modified files.
 *   **Syntax Check**: Checked using `terraform validate` (Success).
 *   **Final Status**: **GO**
 
-The codebase meets all required security baselines and presents a significantly harder security posture than the production main branch.
+The staging branch meets all security guidelines and maintains the secure Tailscale and VM isolation profiles previously established.

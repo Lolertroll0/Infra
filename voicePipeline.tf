@@ -48,7 +48,7 @@ resource "null_resource" "setup_voicePipelineEnvironment" {
       type        = "ssh"
       host        = self.triggers.host_ip
       user        = self.triggers.adminUser
-      private_key = self.triggers.voiceKey != "" ? file(self.triggers.voiceKey) : null
+      private_key = (self.triggers.voiceKey != "" && fileexists(self.triggers.voiceKey)) ? file(self.triggers.voiceKey) : null
       timeout     = "10m"
     }
   }
