@@ -92,6 +92,9 @@ Build a professional-grade, **distributed home lab** managed entirely via **Infr
   - Restored backend access rule `"tag:mainserver:8080"` and added `"group:admin"` to Tailscale SSH permissions in [tailscalePolicy.tf](file:///c:/Users/lolertroll/Infra/tailscalePolicy.tf) to restore Caddy reverse proxy pathways and secure SSH management access.
   - Resolved Tailscale API out-of-sync conflicts by removing the ACL resource from the local state database and re-importing the active console configurations.
   - Migrated Docker providers to connect keylessly over identity-based Tailscale SSH by resolving local developer ACL access on `tag:consumer` and `group:admin`. All docker providers successfully connect via MagicDNS hostnames instead of LAN IPs.
+  - Resolved `terraform: command not found` error in CI/CD pipeline by adding a setup step for Terraform in `.github/workflows/ci.yml`.
+  - Authorized GHA runner (`tag:ci`) to communicate with infrastructure hosts over the Tailnet by adding network-level access rules to port 22 (SSH) and port 8006 (Proxmox API) in `tailscalePolicy.tf` and applying them locally.
+  - Refactored VM definitions and provisioner configurations in `mainServer.tf`, `orchestrator.tf`, and `voicePipeline.tf` to conditionally read SSH private and public key files only when their paths are non-empty. This fixes evaluation-time plan failures (e.g. `read .: is a directory` and missing file crashes) in CI/CD environments.
 
 - **Day 0 Bootstrapping Strategy**
   - **Node IP Table (LAN/Bootstrap Phase)**:

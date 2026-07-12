@@ -38,8 +38,7 @@ resource "tailscale_acl" "home_mesh_policy" {
           "tag:orchestrator:22",
           "tag:mainserver:22",
           "tag:voice:22",
-          "tag:mainserver:8006",
-          "tag:mainserver:22"
+          "tag:mainserver:8006"
         ]
       },
 
@@ -50,6 +49,7 @@ resource "tailscale_acl" "home_mesh_policy" {
           "tag:orchestrator:*",
           "tag:mainserver:22",
           "tag:voice:22",
+
           "svc:vaultwarden:443",
           "svc:uptime-kuma:443",
           "svc:homeassistant:443",
@@ -77,20 +77,24 @@ resource "tailscale_acl" "home_mesh_policy" {
           "tag:voice:10200", # Piper
           "tag:voice:10300", # Whisper
           "tag:voice:11434"  # Ollama API
-        ],
-      },
-
-      {
-        action = "accept",
-        src    = ["group:admin"],
-        dst    = ["*:*"],
-      },
+        ]
+      }
     ],
 
     ssh = [
       {
         action = "accept",
-        src    = ["tag:orchestrator", "tag:mainserver", "tag:voice", "tag:consumer", "tag:ci", "tag:debug", "group:admin", "autogroup:admin", "autogroup:member"],
+        src = [
+          "tag:orchestrator",
+          "tag:mainserver",
+          "tag:voice",
+          "tag:consumer",
+          "tag:ci",
+          "tag:debug",
+          "group:admin",
+          "autogroup:admin",
+          "autogroup:member"
+        ],
         dst = [
           "tag:orchestrator",
           "tag:mainserver",
