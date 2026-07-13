@@ -95,6 +95,11 @@ Build a professional-grade, **distributed home lab** managed entirely via **Infr
   - Resolved `terraform: command not found` error in CI/CD pipeline by adding a setup step for Terraform in `.github/workflows/ci.yml`.
   - Authorized GHA runner (`tag:ci`) to communicate with infrastructure hosts over the Tailnet by adding network-level access rules to port 22 (SSH) and port 8006 (Proxmox API) in `tailscalePolicy.tf` and applying them locally.
   - Refactored VM definitions and provisioner configurations in `mainServer.tf`, `orchestrator.tf`, and `voicePipeline.tf` to conditionally read SSH private and public key files only when their paths are non-empty. This fixes evaluation-time plan failures (e.g. `read .: is a directory` and missing file crashes) in CI/CD environments.
+  - Resolved `HomeAssistantOS` UEFI boot failure by configuring it to use a Full Clone (`full_clone = true`). This replicates both the SCSI system disk and the UEFI NVRAM variables block-for-block, ensuring a successful boot loader match.
+  - Fixed Tailscale SSH connection dropouts during VM/node provision and destroy operations by wrapping the `tailscale up` command in a conditional status check (`if ! sudo tailscale status >/dev/null 2>&1; then ...; fi`) and backgrounding the `tailscale logout` cleanup command using `nohup` and a `sleep 2` delay. This prevents active SSH sessions over Tailscale SSH from dropping abruptly.
+  - Restored network-level access rules for tailnet administrators by adding a general wildcard rule (`group:admin` to `*:*`) in `tailscalePolicy.tf` to authorize SSH management.
+  - Verified and fully enabled the four Tailscale serve virtual services (`svc:vaultwarden`, `svc:uptime-kuma`, `svc:homeassistant`, `svc:ezbk`), routing TLS-terminated requests to the Caddy reverse proxy on port 80.
+
 
 - **Day 0 Bootstrapping Strategy**
   - **Node IP Table (LAN/Bootstrap Phase)**:
@@ -283,6 +288,13 @@ This section captures key decisions and mental models that future agents should 
 
 - **Docker Container DNS Resolution on Tailnets**:
   - Containers that need to query or monitor private Tailscale MagicDNS endpoints (like `*.ts.net`) must have `dns = ["100.100.100.100"]` explicitly declared. Default docker DNS fallback (like `8.8.8.8`) will result in `NXDOMAIN` (`ENOTFOUND`) resolution failures since they lack authority over the private tailnet.
+
+- **UEFI VM Cloning**:
+  - UEFI VMs cloned via the `Telmate/proxmox` provider must use `full_clone = true`. Using linked clones (`full_clone = false`) on UEFI guests causes the provider to write blank partition tables and lose the NVRAM boot variables, leading to UEFI boot failures.
+
+- **Resilient Provisioning Over Tailscale SSH**:
+  - When provisioning systems over Tailscale SSH, network-resetting commands (like `tailscale up`) will immediately drop the SSH connection. Wrapping these commands in a status check (`if ! sudo tailscale status >/dev/null 2>&1; then ...; fi`) prevents redundant reconnections.
+  - Network teardown cleanups (like `tailscale logout`) executed during a destroy phase must be scheduled in a detached background command (`nohup sh -c "sleep 2 && tailscale logout" >/dev/null 2>&1 &`) to allow the calling SSH session to exit cleanly before the network interface drops.
 
 - **Learning focus**
   - The owner is using this project to learn "real" patterns: multi-node infra, secure networking, IaC, SRE practices, CI/CD, and recovery.
