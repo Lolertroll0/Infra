@@ -131,7 +131,7 @@ resource "null_resource" "setup_ezBookKeeping" {
       "sudo systemctl enable --now docker",
       "sudo usermod -aG docker ${var.adminUser}",
       "if command -v tailscale >/dev/null 2>&1; then echo \"Tailscale is already installed.\"; else curl -fsSL https://tailscale.com/install.sh | sudo sh; fi",
-      "sudo tailscale up --authkey=${var.tailscaleMainAuthKey} --ssh --accept-risk=lose-ssh",
+      "if ! sudo tailscale status >/dev/null 2>&1; then sudo tailscale up --authkey=${var.tailscaleMainAuthKey} --ssh --accept-risk=lose-ssh; fi",
       "mkdir -p ${local.data_dir}/ezbk/conf ${local.data_dir}/ezbk/data ${local.data_dir}/ezbk/storage ${local.data_dir}/ezbk/log",
       "sudo chown -R 1000:1000 ${local.data_dir}/ezbk"
     ]
