@@ -5,7 +5,7 @@ resource "proxmox_vm_qemu" "HomeAssistantOS" {
   start_at_node_boot = true
   startup            = "order=1"
   clone              = var.haosTemplate
-  full_clone         = false
+  full_clone         = true
   scsihw             = "virtio-scsi-pci"
   agent              = 1
   bios               = "ovmf"
