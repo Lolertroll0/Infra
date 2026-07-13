@@ -35,24 +35,6 @@ resource "null_resource" "setup_voicePipelineEnvironment" {
     }
   }
 
-  provisioner "remote-exec" { # Provisioner for destroying 
-    when = destroy
-    inline = [
-      "set +e",
-      "DEVICE_ID=$(sudo tailscale status --json 2>/dev/null | jq -r '.Self.ID')",
-      "if [ -n \"$$DEVICE_ID\" ]; then nohup sh -c \"sleep 2 && curl -s -u '${self.triggers.tailscaleSecret}:' -X DELETE https://api.tailscale.com/api/v2/device/$$DEVICE_ID && sudo tailscale logout\" >/dev/null 2>&1 & fi",
-      "exit 0"
-    ]
-    connection {
-      type        = "ssh"
-      host        = self.triggers.host_ip
-      user        = self.triggers.adminUser
-      private_key = (self.triggers.voiceKey != "" && fileexists(self.triggers.voiceKey)) ? file(self.triggers.voiceKey) : null
-      timeout     = "10m"
-    }
-  }
-}
-
 resource "docker_container" "whisper" {
   provider = docker.voicePipeline
   name     = "whisper"
