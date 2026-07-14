@@ -56,6 +56,7 @@ resource "null_resource" "setup_OrchestratorEnvironment" {
 
   provisioner "remote-exec" {
     inline = [
+      "sudo tailscale serve reset",
       "sudo tailscale serve set-config --all /home/lolertroll/config/tailscale/serve.json"
     ]
     connection {

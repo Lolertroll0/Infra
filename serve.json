@@ -1,24 +1,24 @@
 {
   "version": "0.0.1",
   "services": {
-    "svc:vaultwarden": {
+    "svc:ezbk": {
       "endpoints": {
-        "tcp:443": "http://127.0.0.1:80"
-      }
-    },
-    "svc:uptime-kuma": {
-      "endpoints": {
-        "tcp:443": "http://127.0.0.1:80"
+        "https:443": "http://127.0.0.1:80"
       }
     },
     "svc:homeassistant": {
       "endpoints": {
-        "tcp:443": "http://127.0.0.1:80"
+        "https:443": "http://127.0.0.1:80"
       }
     },
-    "svc:ezbk": {
+    "svc:uptime-kuma": {
       "endpoints": {
-        "tcp:443": "http://127.0.0.1:80"
+        "https:443": "http://127.0.0.1:80"
+      }
+    },
+    "svc:vaultwarden": {
+      "endpoints": {
+        "https:443": "http://127.0.0.1:80"
       }
     }
   }
