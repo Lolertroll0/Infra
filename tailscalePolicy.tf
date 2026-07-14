@@ -33,6 +33,12 @@ resource "tailscale_acl" "home_mesh_policy" {
 
       {
         action = "accept",
+        src    = ["group:admin"],
+        dst    = ["*:*"],
+      },
+
+      {
+        action = "accept",
         src    = ["tag:ci"],
         dst = [
           "tag:orchestrator:22",
@@ -44,7 +50,7 @@ resource "tailscale_acl" "home_mesh_policy" {
 
       {
         action = "accept"
-        src    = ["tag:consumer"]
+        src    = ["tag:consumer", "group:admin", "autogroup:admin", "autogroup:member"]
         dst = [
           "tag:orchestrator:*",
           "tag:mainserver:22",
