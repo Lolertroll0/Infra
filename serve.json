@@ -1,7 +1,22 @@
 {
   "version": "0.0.1",
   "services": {
-    "svc:caddy-proxy": {
+    "svc:vaultwarden": {
+      "endpoints": {
+        "tcp:443": "http://127.0.0.1:80"
+      }
+    },
+    "svc:uptime-kuma": {
+      "endpoints": {
+        "tcp:443": "http://127.0.0.1:80"
+      }
+    },
+    "svc:homeassistant": {
+      "endpoints": {
+        "tcp:443": "http://127.0.0.1:80"
+      }
+    },
+    "svc:ezbk": {
       "endpoints": {
         "tcp:443": "http://127.0.0.1:80"
       }
