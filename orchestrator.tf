@@ -11,6 +11,7 @@ resource "null_resource" "setup_OrchestratorEnvironment" {
     adminUser       = var.adminUser
     orchestratorKey = var.orchestratorKey
     caddyfile_hash  = md5(file("${path.module}/caddyfile"))
+    serve_json_hash = md5(file("${path.module}/serve.json"))
     tailscaleSecret = var.tailscaleSecret
   }
 
@@ -23,11 +24,7 @@ resource "null_resource" "setup_OrchestratorEnvironment" {
       "sudo usermod -aG docker ${var.adminUser}",
       "if command -v tailscale >/dev/null 2>&1; then echo \"Tailscale is already installed.\"; else curl -fsSL https://tailscale.com/install.sh | sudo sh; fi",
       "if ! sudo tailscale status >/dev/null 2>&1; then sudo tailscale up --authkey=${var.tailscaleOrchestratorAuthKey} --ssh --accept-risk=lose-ssh; fi",
-      "sudo tailscale serve reset",
-      "sudo tailscale serve --bg --service=svc:vaultwarden --https=443 http://127.0.0.1:80",
-      "sudo tailscale serve --bg --service=svc:uptime-kuma --https=443 http://127.0.0.1:80",
-      "sudo tailscale serve --bg --service=svc:homeassistant --https=443 http://127.0.0.1:80",
-      "sudo tailscale serve --bg --service=svc:ezbk --https=443 http://127.0.0.1:80",
+      "mkdir -p /home/lolertroll/config/tailscale",
       "mkdir -p ${local.config_dir}/caddyProxy",
       "touch ${local.config_dir}/caddyProxy/Caddyfile",
       "mkdir -p ${local.data_dir}/caddyProxy",
@@ -41,6 +38,32 @@ resource "null_resource" "setup_OrchestratorEnvironment" {
       user        = var.adminUser
       private_key = var.orchestratorKey != "" ? file(var.orchestratorKey) : null
       timeout     = "10m"
+    }
+  }
+
+  provisioner "file" {
+    source      = "${path.module}/serve.json"
+    destination = "/home/lolertroll/config/tailscale/serve.json"
+
+    connection {
+      type        = "ssh"
+      host        = var.orchestrator
+      user        = var.adminUser
+      private_key = var.orchestratorKey != "" ? file(var.orchestratorKey) : null
+      timeout     = "5m"
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo tailscale serve set-config --all /home/lolertroll/config/tailscale/serve.json"
+    ]
+    connection {
+      type        = "ssh"
+      host        = var.orchestrator
+      user        = var.adminUser
+      private_key = var.orchestratorKey != "" ? file(var.orchestratorKey) : null
+      timeout     = "5m"
     }
   }
 
