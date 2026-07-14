@@ -34,6 +34,7 @@ resource "null_resource" "setup_voicePipelineEnvironment" {
       timeout     = "10m"
     }
   }
+}
 
 resource "docker_container" "whisper" {
   provider = docker.voicePipeline

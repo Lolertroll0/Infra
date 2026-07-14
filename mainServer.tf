@@ -145,6 +145,7 @@ resource "null_resource" "setup_ezBookKeeping" {
       timeout     = "10m"
     }
   }
+}
 resource "docker_container" "ezbookkeeping" {
   name       = "ezbookkeeping"
   image      = docker_image.ezbookkeeping.name
