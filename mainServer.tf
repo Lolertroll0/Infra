@@ -49,12 +49,7 @@ resource "proxmox_vm_qemu" "HomeAssistantOS" {
   }
 
   lifecycle {
-    ignore_changes = [
-      usbs,
-      disk,
-      efidisk,
-      sshkeys,
-    ]
+    ignore_changes = all
   }
 }
 
