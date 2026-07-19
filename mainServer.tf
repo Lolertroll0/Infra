@@ -113,7 +113,7 @@ resource "proxmox_vm_qemu" "ezBookKeeping" {
 
 # --- DOCKER PROVISIONING ---
 # Wait for the VM to boot, then install Docker and Tailscale
-resource "null_resource" "setup_ezBookKeeping" {
+resource "null_resource" "setup_financial_assistant" {
   depends_on = [proxmox_vm_qemu.ezBookKeeping]
 
   triggers = {
@@ -132,8 +132,8 @@ resource "null_resource" "setup_ezBookKeeping" {
       "sudo usermod -aG docker ${var.adminUser}",
       "if command -v tailscale >/dev/null 2>&1; then echo \"Tailscale is already installed.\"; else curl -fsSL https://tailscale.com/install.sh | sudo sh; fi",
       "if ! sudo tailscale status >/dev/null 2>&1; then sudo tailscale up --authkey=${var.tailscaleMainAuthKey} --ssh --accept-risk=lose-ssh; fi",
-      "mkdir -p ${local.data_dir}/ezbk/conf ${local.data_dir}/ezbk/data ${local.data_dir}/ezbk/storage ${local.data_dir}/ezbk/log",
-      "sudo chown -R 1000:1000 ${local.data_dir}/ezbk"
+      "mkdir -p ${local.data_dir}/firefly/upload ${local.data_dir}/ezbk/conf ${local.data_dir}/ezbk/data ${local.data_dir}/ezbk/storage ${local.data_dir}/ezbk/log",
+      "sudo chown -R 1000:1000 ${local.data_dir}/firefly ${local.data_dir}/ezbk"
     ]
 
     connection {
@@ -145,12 +145,59 @@ resource "null_resource" "setup_ezBookKeeping" {
       timeout     = "10m"
     }
   }
+
+  provisioner "local-exec" {
+    command = "bash ${path.module}/scripts/ff3-vars.sh"
+    environment = {
+      GDRIVE_AUTH_ID = var.gDriveAuthID
+      PASSPHRASE     = var.adminPassword
+      ORCHESTRATOR   = var.orchestrator
+      TARGET_NODE    = var.otherServicesIP
+    }
+  }
+
 }
+
+resource "docker_network" "financial_assistant_net" {
+  provider = docker.otherServices
+  name     = "financial_assistant_net"
+  internal = false
+}
+
+resource "docker_container" "financial_assistant" {
+  name       = "financial_assistant"
+  image      = docker_image.firefly.name
+  provider   = docker.otherServices
+  depends_on = [null_resource.setup_financial_assistant]
+
+  restart = "unless-stopped"
+
+  networks_advanced {
+    name = docker_network.financial_assistant_net.name
+  }
+
+  volumes {
+    container_path = "/var/www/html/.env"
+    host_path      = "${local.config_dir}/firefly/.env"
+    read_only      = true
+  }
+
+  volumes {
+    container_path = "/var/www/html/storage/upload"
+    host_path      = "${local.data_dir}/firefly/upload"
+  }
+
+  ports {
+    internal = 8080
+    external = 8081
+  }
+}
+
 resource "docker_container" "ezbookkeeping" {
   name       = "ezbookkeeping"
   image      = docker_image.ezbookkeeping.name
   provider   = docker.otherServices
-  depends_on = [null_resource.setup_ezBookKeeping]
+  depends_on = [null_resource.setup_financial_assistant]
 
   restart = "unless-stopped"
 
@@ -170,6 +217,48 @@ resource "docker_container" "ezbookkeeping" {
     internal = 8080
     external = 8080
   }
+}
+
+resource "docker_volume" "financial_assistant_db" {
+  provider = docker.otherServices
+  name     = "financial_assistant_db"
+}
+
+resource "docker_container" "financial_assistant_db" {
+  name       = "financial_assistant_db"
+  image      = docker_image.firefly_db.name
+  provider   = docker.otherServices
+  depends_on = [null_resource.setup_financial_assistant]
+  restart    = "unless-stopped"
+
+  networks_advanced {
+    name = docker_network.financial_assistant_net.name
+  }
+
+  volumes {
+    container_path = "/var/lib/mysql"
+    volume_name    = docker_volume.financial_assistant_db.name
+  }
+
+  volumes {
+    container_path = "/run/secrets/.db.env"
+    host_path      = "${local.config_dir}/firefly/.db.env"
+    read_only      = true
+  }
+
+  upload {
+    content    = <<EOF
+#!/bin/bash
+set -a
+source /run/secrets/.db.env
+set +a
+exec /usr/local/bin/docker-entrypoint.sh mysqld
+EOF
+    file       = "/custom-entrypoint.sh"
+    executable = true
+  }
+
+  entrypoint = ["/custom-entrypoint.sh"]
 }
 
 resource "null_resource" "attach_haos_usb" {

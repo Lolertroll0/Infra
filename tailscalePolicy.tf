@@ -91,12 +91,7 @@ resource "tailscale_acl" "home_mesh_policy" {
       {
         action = "accept",
         src = [
-          "tag:orchestrator",
-          "tag:mainserver",
-          "tag:voice",
           "tag:consumer",
-          "tag:ci",
-          "tag:debug",
           "group:admin",
           "autogroup:admin",
           "autogroup:member"
@@ -111,6 +106,23 @@ resource "tailscale_acl" "home_mesh_policy" {
         ],
         users = ["${var.adminUser}", "root"],
       },
+      {
+        action = "accept",
+        src = [
+          "tag:ci",
+          "tag:orchestrator",
+          "tag:mainserver",
+          "tag:voice",
+          "tag:debug"
+        ],
+        dst = [
+          "tag:orchestrator",
+          "tag:mainserver",
+          "tag:voice",
+          "tag:debug"
+        ],
+        users = ["${var.adminUser}"],
+      }
     ],
 
   })
