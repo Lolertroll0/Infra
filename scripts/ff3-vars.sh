@@ -5,7 +5,7 @@ set -e
 GDRIVE_URL="googledrive://backup?authid=${GDRIVE_AUTH_ID}"
 
 echo "1. Restoring files on Orchestrator via Duplicati..."
-ssh -o StrictHostKeyChecking=no lolertroll@$ORCHESTRATOR "mkdir -p /tmp/firefly-secrets && docker exec duplicati duplicati-cli restore \"$GDRIVE_URL\" \"*\" --restore-path=\"/tmp/firefly-secrets\" --overwrite=true --passphrase=\"$PASSPHRASE\" && find /tmp/firefly-secrets -mindepth 2 -type f -name '*.env' -exec mv {} /tmp/firefly-secrets/ \\;"
+ssh -o StrictHostKeyChecking=no lolertroll@$ORCHESTRATOR "mkdir -p /tmp/firefly-secrets && docker exec duplicati duplicati-cli restore \"$GDRIVE_URL\" --restore-path=\"/tmp/firefly-secrets\" --overwrite=true --passphrase=\"$PASSPHRASE\" && find /tmp/firefly-secrets -type f -name '*.env' -exec mv {} /tmp/firefly-secrets/ \\;"
 
 echo "2. Transferring files from Orchestrator to Target Node..."
 mkdir -p ./temp_secrets
