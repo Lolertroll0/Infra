@@ -101,7 +101,10 @@ Build a professional-grade, **distributed home lab** managed entirely via **Infr
   - Restored network-level access rules for tailnet administrators by adding a general wildcard rule (`group:admin` to `*:*`) in `tailscalePolicy.tf` to authorize SSH management.
   - Verified and fully enabled the four Tailscale serve virtual services (`svc:vaultwarden`, `svc:uptime-kuma`, `svc:homeassistant`, `svc:ezbk`), routing TLS-terminated requests to the Caddy reverse proxy on port 80.
   - Resolved access issues to virtual services (like `ezbk`) from developer laptops. Discovered that the declarative `tailscale serve set-config --all` command has a TLS-termination bug where mapping `"tcp:443": "http://..."` incorrectly configures the listener as `"HTTP": true` (plain HTTP) instead of `"HTTPS": true`, leading to handshake errors (`SEC_E_INVALID_TOKEN` / `wrong version number`). Reverted `orchestrator.tf` to use separate `tailscale serve --https=443` CLI commands to work around the bug and correctly enforce TLS termination. Added autogroups (`autogroup:admin`, `autogroup:member`) to the Tailscale ACL rules to ensure proper user access permissions over virtual services.
-
+  - Designed and implemented a side-by-side data migration architecture, standing up **Firefly III** alongside the legacy `ezBookKeeping` container on the same Proxmox VM. Mapped Firefly to port 8081 while maintaining ezBookKeeping on 8080 to ensure zero downtime during data transition.
+  - Achieved **zero-trust credential injection** for the Firefly database: Used `local-exec` provisioners to trigger a bash script (`ff3-vars.sh`) that reads encrypted passwords from Duplicati (via Google Drive OAuth) and transmits them directly to the remote VM over Tailscale SSH. This prevents highly sensitive database credentials from ever touching the Terraform state file.
+  - Completed a comprehensive pre-merge security validation (`/sec-validation`): Pinned all new Docker image tags to immutable versions (`fireflyiii/core:6.1.17`, `mariadb:11.4`) to guarantee deterministic deployments, and hardened `tailscalePolicy.tf` by strictly restricting the GitHub Actions runner (`tag:ci`) to non-root `adminUser` SSH access to prevent privilege escalation.
+  - Debugged and resolved a 30-minute GitHub Actions hang: Discovered that missing required variables trigger Terraform's interactive prompt, which blocks CI runners indefinitely. Added `timeout-minutes: 20` and `-input=false` flags to all workflow steps, and fixed context resolution bugs (differentiating between `${{ vars.* }}` and `${{ secrets.* }}`).
 
 - **Day 0 Bootstrapping Strategy**
   - **Node IP Table (LAN/Bootstrap Phase)**:
@@ -151,6 +154,7 @@ This section lists actionable items to move the project toward a stable, profess
 - [ ] Modularize Terraform into per-node modules:
   - `modules/main_server`, `modules/orchestrator`, `modules/voice_pipeline`.
   - Root config becomes wiring + providers + high-level variables.
+- [ ] **Data Migration Phase**: Decommission `ezBookKeeping` containers, remove port 8080 mapping, and route `svc:ezbk` directly to Firefly III once data migration is verified.
 
 ### Containers and provisioning
 
@@ -281,6 +285,9 @@ This section captures key decisions and mental models that future agents should 
 - **Environment Parity & Dynamic Provider Configuration**:
   - By using Terraform's `concat` and conditional expressions, we can dynamically build the provider's `ssh_opts` depending on whether a local SSH key path variable is supplied. This allows developer environments (using local key files) and production CI/CD runners (connecting keylessly via Tailscale SSH) to share the exact same HCL code.
 
+- **Zero-Trust Credential Injection (State File Protection)**:
+  - For highly sensitive credentials (like database passwords), storing them in Terraform variables inherently exposes them in the plaintext `.tfstate` file. To bypass this, we use `local-exec` provisioners to run local bash scripts that pull the secrets from an encrypted backup system (Duplicati) and SCP them directly into the remote server via Tailscale SSH as `.env` files. We then use a custom `entrypoint` script in the Docker container to source the `.env` file at runtime, keeping Terraform completely blind to the actual secret values.
+
 - **Least Privilege and Keyless Access Control**:
   - Relying on machine identity (Tailscale SSH) for CI/CD runners rather than uploading static private SSH keys to GitHub Secrets is an SRE best practice. It eliminates key rotation and management lifecycle overhead, while significantly reducing the repository's security attack surface.
 
@@ -298,6 +305,9 @@ This section captures key decisions and mental models that future agents should 
   - When provisioning systems over Tailscale SSH, network-resetting commands (like `tailscale up`) will immediately drop the SSH connection. Wrapping these commands in a status check (`if ! sudo tailscale status >/dev/null 2>&1; then ...; fi`) prevents redundant reconnections and connection resets.
   - Destroy-time provisioners that perform network logout operations (like `tailscale logout`) introduce critical race conditions on replacement plans (destroy then immediately create). Because the logout is backgrounded with a delay to prevent SSH dropout, it fires *after* the new creation provisioner checks the status, logging the node out right after it gets created. Completely removing these destroy-time logout blocks from reusable node setups is the most robust way to manage persistent Tailnet nodes.
   - **Tailscale Serve `set-config` TLS-Termination Bug**: Applying declarative configurations via `tailscale serve set-config --all` using a JSON/HuJSON file that specifies `"tcp:443": "http://127.0.0.1:80"` incorrectly configures the listener in the daemon as `"HTTP": true` (plain HTTP) instead of `"HTTPS": true`. This causes TLS handshakes to fail with errors like `wrong version number` or `SEC_E_INVALID_TOKEN`. To work around this bug, use separate command-line invocations (e.g. `tailscale serve --https=443 ...`) which correctly register and enforce TLS termination.
+
+- **CI/CD Indefinite Hangs & Non-Interactive Terraform**:
+  - If a required variable is missing in a GitHub Actions workflow, Terraform will pause and prompt for interactive stdin input. Because the CI runner is non-interactive but leaves the stdin pipe open, the job will hang indefinitely (or until the runner maximum timeout). Always append `-input=false` to `terraform plan` and `terraform apply` in automated environments, and set a hard `timeout-minutes` at the job level.
 
 - **Learning focus**
   - The owner is using this project to learn "real" patterns: multi-node infra, secure networking, IaC, SRE practices, CI/CD, and recovery.
