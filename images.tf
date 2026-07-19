@@ -38,7 +38,19 @@ resource "docker_image" "piper" {
 resource "docker_image" "ezbookkeeping" {
   provider   = docker.otherServices
   name       = "mayswind/ezbookkeeping:1.5"
-  depends_on = [null_resource.setup_ezBookKeeping]
+  depends_on = [null_resource.setup_financial_assistant]
+}
+
+resource "docker_image" "firefly" {
+  provider   = docker.otherServices
+  name       = "fireflyiii/core:6.1.17"
+  depends_on = [null_resource.setup_financial_assistant]
+}
+
+resource "docker_image" "firefly_db" {
+  provider   = docker.otherServices
+  name       = "mariadb:11.4"
+  depends_on = [null_resource.setup_financial_assistant]
 }
 
 resource "docker_image" "duplicati" {

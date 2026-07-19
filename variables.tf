@@ -17,6 +17,12 @@ variable "adminPassword" {
   sensitive   = true
 }
 
+variable "gDriveAuthID" {
+  type        = string
+  description = "AuthId for duplicati's gDrive backup"
+  sensitive   = true
+}
+
 # List of URLs for the docker providers (magicDNS)
 # These will be used almost all the time
 variable "mainServer" {
