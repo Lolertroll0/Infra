@@ -53,6 +53,7 @@ resource "proxmox_vm_qemu" "HomeAssistantOS" {
       usbs,
       disk,
       efidisk,
+      sshkeys,
     ]
   }
 }
