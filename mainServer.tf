@@ -54,6 +54,7 @@ resource "proxmox_vm_qemu" "HomeAssistantOS" {
       disk,
       efidisk,
       sshkeys,
+      shares,
     ]
   }
 }
@@ -108,6 +109,8 @@ resource "proxmox_vm_qemu" "ezBookKeeping" {
   lifecycle {
     ignore_changes = [
       disk,
+      sshkeys,
+      shares,
     ]
   }
 }
