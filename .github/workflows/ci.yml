@@ -6,6 +6,7 @@ on:
 jobs:
   createplan:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       pull-requests: write
       contents: read
@@ -50,6 +51,7 @@ jobs:
 
           TF_VAR_tailscaleSecret: ${{ secrets.TAILSCALE_API_KEY }}
           TF_VAR_tailnet: ${{ secrets.TAILNET }}
+          TF_VAR_gDriveAuthID: ${{ secrets.GDRIVE_AUTH_ID }}
 
           TF_VAR_tailscaleOrchestratorAuthKey: ${{ secrets.TAILSCALE_ORCHESTRATOR_AUTH_KEY }}
           TF_VAR_tailscaleMainAuthKey: ${{ secrets.TAILSCALE_MAIN_AUTH_KEY }}
@@ -73,7 +75,7 @@ jobs:
           TF_VAR_ezbkTemplate: ${{ secrets.EZBK_TEMPLATE }}
           TF_VAR_homeAssistantUSB: ${{ secrets.HOME_ASSISTANT_USB }}
         run: |
-          terraform plan -out=tfplan -no-color > terraform.log
+          terraform plan -out=tfplan -input=false -no-color > terraform.log
           
           # Create plan output comment file
           echo "### Terraform Plan Output 📝" > pr_plan.txt

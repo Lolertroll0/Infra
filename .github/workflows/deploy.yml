@@ -7,6 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       TF_VAR_mainServer: ${{ secrets.MAIN_SERVER_URL }}
       TF_VAR_orchestrator: ${{ secrets.ORCHESTRATOR_URL }}
@@ -21,6 +22,7 @@ jobs:
 
       TF_VAR_tailscaleSecret: ${{ secrets.TAILSCALE_API_KEY }}
       TF_VAR_tailnet: ${{ secrets.TAILNET }}
+      TF_VAR_gDriveAuthID: ${{ secrets.GDRIVE_AUTH_ID }}
 
       TF_VAR_tailscaleOrchestratorAuthKey: ${{ secrets.TAILSCALE_ORCHESTRATOR_AUTH_KEY }}
       TF_VAR_tailscaleMainAuthKey: ${{ secrets.TAILSCALE_MAIN_AUTH_KEY }}
@@ -67,10 +69,10 @@ jobs:
         run: terraform init
 
       - name: Terraform Plan
-        run: terraform plan -out=tfplan
+        run: terraform plan -out=tfplan -input=false
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan 2>&1 > apply.log
+        run: terraform apply -auto-approve -input=false tfplan 2>&1 > apply.log
 
       - name: Capture Failure Logs
         if: failure()
