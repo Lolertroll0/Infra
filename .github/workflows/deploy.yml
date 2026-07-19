@@ -42,9 +42,9 @@ jobs:
       TF_VAR_proxmoxAPI: ${{ secrets.PROXMOX_API_URL }}
       TF_VAR_proxmoxTokenId: ${{ secrets.PROXMOX_TOKEN_ID }}
       TF_VAR_proxmoxSecret: ${{ secrets.PROXMOX_SECRET }}
-      TF_VAR_haosTemplate: ${{ secrets.HAOS_TEMPLATE }}
-      TF_VAR_ezbkTemplate: ${{ secrets.EZBK_TEMPLATE }}
-      TF_VAR_homeAssistantUSB: ${{ secrets.HOME_ASSISTANT_USB }}
+      TF_VAR_haosTemplate: ${{ vars.HAOS_TEMPLATE }}
+      TF_VAR_ezbkTemplate: ${{ vars.EZBK_TEMPLATE }}
+      TF_VAR_homeAssistantUSB: ${{ vars.HOME_ASSISTANT_USB }}
 
     steps:
       - name: Checkout code
