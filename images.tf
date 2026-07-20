@@ -43,7 +43,7 @@ resource "docker_image" "ezbookkeeping" {
 
 resource "docker_image" "firefly" {
   provider   = docker.otherServices
-  name       = "fireflyiii/core:6.1.17"
+  name       = "fireflyiii/core:version-6.6"
   depends_on = [null_resource.setup_financial_assistant]
 }
 
