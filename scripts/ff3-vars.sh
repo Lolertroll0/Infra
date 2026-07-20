@@ -9,6 +9,7 @@ ssh -o StrictHostKeyChecking=no lolertroll@$ORCHESTRATOR "rm -rf /tmp/firefly-se
 
 echo "2. Transferring files from Orchestrator to Target Node..."
 mkdir -p ./temp_secrets
+ssh -o StrictHostKeyChecking=no lolertroll@$TARGET_NODE "mkdir -p /home/lolertroll/config/firefly/"
 scp -o StrictHostKeyChecking=no lolertroll@$ORCHESTRATOR:/tmp/firefly-secrets/.env ./temp_secrets/
 scp -o StrictHostKeyChecking=no lolertroll@$ORCHESTRATOR:/tmp/firefly-secrets/.db.env ./temp_secrets/
 scp -o StrictHostKeyChecking=no ./temp_secrets/.env ./temp_secrets/.db.env lolertroll@$TARGET_NODE:/home/lolertroll/config/firefly/
