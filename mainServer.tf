@@ -249,7 +249,7 @@ resource "docker_container" "financial_assistant_db" {
 set -a
 source /run/secrets/.db.env
 set +a
-exec /usr/local/bin/docker-entrypoint.sh mysqld
+exec /usr/local/bin/docker-entrypoint.sh mariadbd
 EOF
     file       = "/custom-entrypoint.sh"
     executable = true
