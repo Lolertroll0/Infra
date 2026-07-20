@@ -229,7 +229,8 @@ resource "docker_container" "financial_assistant_db" {
   restart    = "unless-stopped"
 
   networks_advanced {
-    name = docker_network.financial_assistant_net.name
+    name    = docker_network.financial_assistant_net.name
+    aliases = ["db", "financial_assistant_db"]
   }
 
   volumes {
@@ -244,13 +245,14 @@ resource "docker_container" "financial_assistant_db" {
   }
 
   upload {
-    content    = <<EOF
+    content    = replace(<<-EOF
 #!/bin/bash
 set -a
 source /run/secrets/.db.env
 set +a
 exec /usr/local/bin/docker-entrypoint.sh mariadbd
 EOF
+    , "\r", "")
     file       = "/custom-entrypoint.sh"
     executable = true
   }
