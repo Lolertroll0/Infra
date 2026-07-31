@@ -11,7 +11,7 @@ resource "docker_image" "caddyProxy" {
 }
 resource "docker_image" "vaultWarden" {
   provider   = docker.orchestrator
-  name       = "vaultwarden/server:1.36.0"
+  name       = "vaultwarden/server:1.37.1"
   depends_on = [null_resource.setup_OrchestratorEnvironment]
 }
 
