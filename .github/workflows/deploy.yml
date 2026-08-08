@@ -2,13 +2,11 @@ name: Deploy Infra
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ main ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
       TF_VAR_mainServer: ${{ secrets.MAIN_SERVER_URL }}
       TF_VAR_orchestrator: ${{ secrets.ORCHESTRATOR_URL }}
@@ -65,23 +63,31 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
           tags: tag:ci
 
-      # 2. Terraform Operations
-      - name: Terraform Init
-        run: terraform init
+      # 2. Layer 1: Infrastructure Deployment
+      - name: Terraform Init & Apply (Layer 1 - Infra)
+        run: |
+          terraform -chdir="layers/1- Infra" init
+          terraform -chdir="layers/1- Infra" plan -out=infra.tfplan -input=false
+          terraform -chdir="layers/1- Infra" apply -auto-approve -input=false infra.tfplan 2>&1 > infra_apply.log
 
-      - name: Terraform Plan
-        run: terraform plan -out=tfplan -input=false
+      # 3. Layer 2: Services Deployment
+      - name: Terraform Init & Apply (Layer 2 - Services)
+        run: |
+          terraform -chdir="layers/2 - Services" init
+          terraform -chdir="layers/2 - Services" plan -out=services.tfplan -input=false
+          terraform -chdir="layers/2 - Services" apply -auto-approve -input=false services.tfplan 2>&1 > services_apply.log
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve -input=false tfplan 2>&1 > apply.log
-
+      # 4. Capture Failure Logs
       - name: Capture Failure Logs
         if: failure()
         run: |
-          tail -n 500 apply.log > error_log.txt
+          echo "=== LAYER 1 ERROR LOG ===" > error_log.txt
+          tail -n 250 infra_apply.log >> error_log.txt 2>/dev/null || true
+          echo "=== LAYER 2 ERROR LOG ===" >> error_log.txt
+          tail -n 250 services_apply.log >> error_log.txt 2>/dev/null || true
           {
             echo 'TF_APPLY_ERROR<<EOF'
-            tail -n 20 error_log.txt
+            tail -n 30 error_log.txt
             echo 'EOF'
           } >> "$GITHUB_ENV"
 
@@ -93,13 +99,13 @@ jobs:
           name: terraform-error-log
           path: error_log.txt
 
-      # 3. Observability: Send messages to Discord
+      # 5. Observability: Send messages to Discord
       - name: Send success message to discord
         if: success()
         uses: tsickert/discord-webhook@v6.0.0
         with:
           webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
-          content: "Changes deployed on the infrastructure successfully. ✅"
+          content: "Multi-layer infrastructure deployment applied successfully! ✅ (Layers 1 & 2 complete)"
 
       - name: Send failure message to discord
         if: failure()
@@ -107,9 +113,9 @@ jobs:
         with:
           webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
           content: |
-            **Infrastructure Deployment FAILED** ❌
+            **Multi-layer Infrastructure Deployment FAILED** ❌
             [View Full Error Log](${{ steps.artifact-upload.outputs.artifact-url }})
 
-      # 4. Logout from Tailnet
-      - name: logout from tailnet
+      # 6. Logout from Tailnet
+      - name: Logout from Tailnet
         run: sudo tailscale logout
