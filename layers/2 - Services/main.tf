@@ -104,7 +104,7 @@ resource "docker_container" "duplicati" {
     docker_container.caddyProxy
   ]
   env = [
-    "DUPLICATI__WEBSERVICE_PASSWORD=${local.terraform_remote_state.outputs.adminPassword}"
+    "DUPLICATI__WEBSERVICE_PASSWORD=${data.terraform_remote_state.infra.outputs.adminPassword}"
   ]
 }
 

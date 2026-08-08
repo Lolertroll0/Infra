@@ -18,23 +18,23 @@ terraform {
 
 provider "docker" {
   alias    = "mainServer"
-  host     = "ssh://${data.infra.outputs.adminUser}@${data.infra.outputs.mainServer}:22"
-  ssh_opts = concat(data.infra.outputs.mainKey != "" ? ["-i", data.infra.outputs.mainKey] : [], ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"])
+  host     = "ssh://${data.terraform_remote_state.infra.outputs.adminUser}@${data.terraform_remote_state.infra.outputs.mainServer}:22"
+  ssh_opts = concat(data.terraform_remote_state.infra.outputs.mainKey != "" ? ["-i", data.terraform_remote_state.infra.outputs.mainKey] : [], ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"])
 }
 provider "docker" {
   alias    = "orchestrator"
-  host     = "ssh://${data.infra.outputs.adminUser}@${data.infra.outputs.orchestrator}:22"
-  ssh_opts = concat(data.infra.outputs.orchestratorKey != "" ? ["-i", data.infra.outputs.orchestratorKey] : [], ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"])
+  host     = "ssh://${data.terraform_remote_state.infra.outputs.adminUser}@${data.terraform_remote_state.infra.outputs.orchestrator}:22"
+  ssh_opts = concat(data.terraform_remote_state.infra.outputs.orchestratorKey != "" ? ["-i", data.terraform_remote_state.infra.outputs.orchestratorKey] : [], ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"])
 }
 
 provider "docker" {
   alias    = "voicePipeline"
-  host     = "ssh://${data.infra.outputs.adminUser}@${data.infra.outputs.voicePipeline}:22"
-  ssh_opts = concat(data.infra.outputs.voiceKey != "" ? ["-i", data.infra.outputs.voiceKey] : [], ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"])
+  host     = "ssh://${data.terraform_remote_state.infra.outputs.adminUser}@${data.terraform_remote_state.infra.outputs.voicePipeline}:22"
+  ssh_opts = concat(data.terraform_remote_state.infra.outputs.voiceKey != "" ? ["-i", data.terraform_remote_state.infra.outputs.voiceKey] : [], ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"])
 }
 
 provider "docker" {
   alias    = "otherServices"
-  host     = "ssh://${data.infra.outputs.adminUser}@${data.infra.outputs.otherServicesIP}:22"
-  ssh_opts = concat(data.infra.outputs.otherServicesKey != "" ? ["-i", data.infra.outputs.otherServicesKey] : [], ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"])
+  host     = "ssh://${data.terraform_remote_state.infra.outputs.adminUser}@${data.terraform_remote_state.infra.outputs.otherServicesIP}:22"
+  ssh_opts = concat(data.terraform_remote_state.infra.outputs.otherServicesKey != "" ? ["-i", data.terraform_remote_state.infra.outputs.otherServicesKey] : [], ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"])
 }
