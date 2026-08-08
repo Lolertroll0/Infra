@@ -26,6 +26,7 @@ resource "tailscale_acl" "home_mesh_policy" {
         "svc:uptime-kuma"   = ["tag:orchestrator"]
         "svc:homeassistant" = ["tag:orchestrator"]
         "svc:ezbk"          = ["tag:orchestrator"]
+        "svc:ff3"           = ["tag:orchestrator"]
       }
     },
 
@@ -59,7 +60,8 @@ resource "tailscale_acl" "home_mesh_policy" {
           "svc:vaultwarden:443",
           "svc:uptime-kuma:443",
           "svc:homeassistant:443",
-          "svc:ezbk:443"
+          "svc:ezbk:443",
+          "svc:ff3:443"
         ]
       },
 
@@ -72,7 +74,8 @@ resource "tailscale_acl" "home_mesh_policy" {
           "svc:ezbk:443",          # ezBookKeeping Virtual Service
           "svc:homeassistant:443", # Home Assistant OS Virtual Service
           "svc:vaultwarden:443",   # Vaultwarden Virtual Service
-          "svc:uptime-kuma:443"    # Uptime Kuma Virtual Service
+          "svc:uptime-kuma:443",   # Uptime Kuma Virtual Service
+          "svc:ff3:443"            # FF3 Virtual Service
         ],
       },
 

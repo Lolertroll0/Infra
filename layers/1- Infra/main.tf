@@ -46,11 +46,12 @@ resource "null_resource" "setup_financial_assistant" {
 
 resource "null_resource" "setup_OrchestratorEnvironment" {
   triggers = {
-    host_ip         = var.orchestrator
-    adminUser       = var.adminUser
-    orchestratorKey = var.orchestratorKey
-    caddyfile_hash  = md5(file("${path.module}/caddyfile"))
-    tailscaleSecret = var.tailscaleSecret
+    host_ip           = var.orchestrator
+    adminUser         = var.adminUser
+    orchestratorKey   = var.orchestratorKey
+    caddyfile_hash    = md5(file("${path.module}/../../caddyfile"))
+    serve_script_hash = md5(file("${path.module}/../../scripts/setup-tailscale-serve.sh"))
+    tailscaleSecret   = var.tailscaleSecret
   }
 
   provisioner "remote-exec" {
@@ -62,17 +63,7 @@ resource "null_resource" "setup_OrchestratorEnvironment" {
       "sudo usermod -aG docker ${var.adminUser}",
       "if command -v tailscale >/dev/null 2>&1; then echo \"Tailscale is already installed.\"; else curl -fsSL https://tailscale.com/install.sh | sudo sh; fi",
       "if ! sudo tailscale status >/dev/null 2>&1; then sudo tailscale up --authkey=${var.tailscaleOrchestratorAuthKey} --ssh --accept-risk=lose-ssh; fi",
-      "sudo tailscale serve reset",
-      "sudo tailscale serve --bg --service=svc:vaultwarden --https=443 http://127.0.0.1:80",
-      "sudo tailscale serve --bg --service=svc:uptime-kuma --https=443 http://127.0.0.1:80",
-      "sudo tailscale serve --bg --service=svc:homeassistant --https=443 http://127.0.0.1:80",
-      "sudo tailscale serve --bg --service=svc:ezbk --https=443 http://127.0.0.1:80",
-      "mkdir -p ${local.config_dir}/caddyProxy",
-      "touch ${local.config_dir}/caddyProxy/Caddyfile",
-      "mkdir -p ${local.data_dir}/caddyProxy",
-      "mkdir -p ${local.data_dir}/uptimeKuma",
-      "mkdir -p ${local.data_dir}/vaultwarden",
-      "mkdir -p ${local.data_dir}/duplicati"
+      "mkdir -p ${local.config_dir}/caddyProxy ${local.data_dir}/caddyProxy ${local.data_dir}/uptimeKuma ${local.data_dir}/vaultwarden ${local.data_dir}/duplicati"
     ]
     connection {
       type        = "ssh"
@@ -84,7 +75,36 @@ resource "null_resource" "setup_OrchestratorEnvironment" {
   }
 
   provisioner "file" {
-    content     = templatefile("${path.module}/caddyfile", { tailnet = var.tailnet })
+    source      = "${path.module}/../../scripts/setup-tailscale-serve.sh"
+    destination = "/tmp/setup-tailscale-serve.sh"
+
+    connection {
+      type        = "ssh"
+      host        = var.orchestrator
+      user        = var.adminUser
+      private_key = var.orchestratorKey != "" ? file(var.orchestratorKey) : null
+      timeout     = "5m"
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sed -i 's/\\r$//' /tmp/setup-tailscale-serve.sh",
+      "chmod +x /tmp/setup-tailscale-serve.sh",
+      "sudo /tmp/setup-tailscale-serve.sh"
+    ]
+
+    connection {
+      type        = "ssh"
+      host        = var.orchestrator
+      user        = var.adminUser
+      private_key = var.orchestratorKey != "" ? file(var.orchestratorKey) : null
+      timeout     = "5m"
+    }
+  }
+
+  provisioner "file" {
+    content     = templatefile("${path.module}/../../caddyfile", { tailnet = var.tailnet })
     destination = "${local.config_dir}/caddyProxy/Caddyfile"
 
     connection {
