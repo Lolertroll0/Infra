@@ -19,3 +19,7 @@ http://homeassistant.${tailnet} {
 http://ezbk.${tailnet} {
 	reverse_proxy ezbookkeeping.${tailnet}:8080
 }
+
+http://ff3.${tailnet} {
+	reverse_proxy ezbookkeeping.${tailnet}:8081
+}

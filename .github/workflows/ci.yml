@@ -22,21 +22,22 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
           tags: tag:ci
 
+      # 2. Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.15
           cli_config_credentials_token: ${{ secrets.TERRAFORM_API_TOKEN }}
 
-      # 3. Terraform Operations
-      - name: Terraform Init
-        run: terraform init
-          
-      - name: Terraform Format
-        run: terraform fmt -check
+      # 3. Layer 1: Infrastructure Operations
+      - name: Terraform Init (Layer 1 - Infra)
+        run: terraform -chdir="layers/1- Infra" init
 
-      - name: Terraform Plan
-        id: plan
+      - name: Terraform Format (Layer 1 - Infra)
+        run: terraform -chdir="layers/1- Infra" fmt -check
+
+      - name: Terraform Plan (Layer 1 - Infra)
+        id: plan_infra
         env:
           TF_VAR_mainServer: ${{ secrets.MAIN_SERVER_URL }}
           TF_VAR_orchestrator: ${{ secrets.ORCHESTRATOR_URL }}
@@ -75,21 +76,36 @@ jobs:
           TF_VAR_ezbkTemplate: ${{ vars.EZBK_TEMPLATE }}
           TF_VAR_homeAssistantUSB: ${{ vars.HOME_ASSISTANT_USB }}
         run: |
-          terraform plan -out=tfplan -input=false -no-color > terraform.log
-          
-          # Create plan output comment file
-          echo "### Terraform Plan Output 📝" > pr_plan.txt
-          echo "\`\`\`terraform" >> pr_plan.txt
-          tail -c 50000 terraform.log >> pr_plan.txt
-          echo "\`\`\`" >> pr_plan.txt
+          terraform -chdir="layers/1- Infra" plan -out=infra.tfplan -input=false -no-color > infra_plan.log
 
-      - name: send plan to PR comment
+      # 4. Layer 2: Services Operations
+      - name: Terraform Init (Layer 2 - Services)
+        run: terraform -chdir="layers/2 - Services" init
+
+      - name: Terraform Format (Layer 2 - Services)
+        run: terraform -chdir="layers/2 - Services" fmt -check
+
+      - name: Terraform Plan (Layer 2 - Services)
+        id: plan_services
+        run: |
+          terraform -chdir="layers/2 - Services" plan -out=services.tfplan -input=false -no-color > services_plan.log
+
+      # 5. Send Combined Plan to PR Comment
+      - name: Send combined plan to PR comment
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          echo "### Layer 1 (Infra) Plan Output 📝" > pr_plan.txt
+          echo "\`\`\`terraform" >> pr_plan.txt
+          tail -c 25000 layers/1-\ Infra/infra_plan.log >> pr_plan.txt
+          echo "\`\`\`" >> pr_plan.txt
+          echo "" >> pr_plan.txt
+          echo "### Layer 2 (Services) Plan Output 📝" >> pr_plan.txt
+          echo "\`\`\`terraform" >> pr_plan.txt
+          tail -c 25000 layers/2\ -\ Services/services_plan.log >> pr_plan.txt
+          echo "\`\`\`" >> pr_plan.txt
           gh pr comment ${{ github.event.pull_request.number }} --body-file pr_plan.txt
 
-      # 4. Logout from Tailnet
-      - name: logout from tailnet
+      # 6. Logout from Tailnet
+      - name: Logout from Tailnet
         run: sudo tailscale logout
-
