@@ -74,9 +74,9 @@ jobs:
       - name: Reconcile Docker State (Layer 2 - Services)
         run: |
           echo "Reconciling unmanaged Docker containers for initial state adoption..."
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.ADMIN_USER }}@${{ secrets.ORCHESTRATOR_URL }} "sudo docker rm -f caddyProxy uptimeKuma vaultwarden duplicati 2>/dev/null || docker rm -f caddyProxy uptimeKuma vaultwarden duplicati || true" || true
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.ADMIN_USER }}@${{ secrets.OTHER_SERVICES_IP }} "sudo docker rm -f ezbookkeeping financial_assistant financial_assistant_db 2>/dev/null || docker rm -f ezbookkeeping financial_assistant financial_assistant_db || true" || true
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.ADMIN_USER }}@${{ secrets.VOICE_PIPELINE_URL }} "sudo docker rm -f whisper piper ollama 2>/dev/null || docker rm -f whisper piper ollama || true" || true
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.ADMIN_USER }}@${{ secrets.ORCHESTRATOR_URL }} "echo '${{ secrets.ADMIN_PASSWORD }}' | sudo -S docker rm -f caddyProxy uptimeKuma vaultwarden duplicati || docker rm -f caddyProxy uptimeKuma vaultwarden duplicati || true" || true
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.ADMIN_USER }}@${{ secrets.OTHER_SERVICES_IP }} "echo '${{ secrets.ADMIN_PASSWORD }}' | sudo -S docker rm -f ezbookkeeping financial_assistant financial_assistant_db || docker rm -f ezbookkeeping financial_assistant financial_assistant_db || true" || true
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.ADMIN_USER }}@${{ secrets.VOICE_PIPELINE_URL }} "echo '${{ secrets.ADMIN_PASSWORD }}' | sudo -S docker rm -f whisper piper ollama || docker rm -f whisper piper ollama || true" || true
 
       - name: Terraform Init & Apply (Layer 2 - Services)
         run: |
