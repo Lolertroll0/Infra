@@ -27,11 +27,11 @@ resource "tailscale_acl" "home_mesh_policy" {
 
     autoApprovers = {
       services = {
-        "svc:vaultwarden"   = ["tag:orchestrator"]
-        "svc:uptime-kuma"   = ["tag:orchestrator"]
-        "svc:homeassistant" = ["tag:orchestrator"]
-        "svc:ezbk"          = ["tag:orchestrator"]
-        "svc:ff3"           = ["tag:orchestrator"]
+        "svc:vaultwarden"   = ["tag:orchestrator", "group:admin", "autogroup:admin"]
+        "svc:uptime-kuma"   = ["tag:orchestrator", "group:admin", "autogroup:admin"]
+        "svc:homeassistant" = ["tag:orchestrator", "group:admin", "autogroup:admin"]
+        "svc:ezbk"          = ["tag:orchestrator", "group:admin", "autogroup:admin"]
+        "svc:ff3"           = ["tag:orchestrator", "group:admin", "autogroup:admin"]
       }
     },
 
