@@ -222,6 +222,7 @@ resource "proxmox_vm_qemu" "ezBookKeeping" {
   os_type    = "cloud-init"
   ciuser     = var.adminUser
   cipassword = var.adminPassword
+  nameserver = "1.1.1.1 8.8.8.8"
 
   # trimspace removes trailing newlines that corrupt Cloud-Init YAML injection
   sshkeys = var.otherServicesKeyPublic != "" ? trimspace(file(var.otherServicesKeyPublic)) : ""
