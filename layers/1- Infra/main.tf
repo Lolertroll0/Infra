@@ -13,6 +13,7 @@ resource "null_resource" "setup_financial_assistant" {
     inline = [
       "set -x",
       "sudo systemctl enable --now serial-getty@ttyS0.service",
+      "sudo sed -i 's/#DNS=/DNS=1.1.1.1 8.8.8.8 /' /etc/systemd/resolved.conf && sudo sed -i 's/#FallbackDNS=/FallbackDNS=1.1.1.1 8.8.8.8 /' /etc/systemd/resolved.conf && sudo systemctl restart systemd-resolved || true",
       "if command -v docker >/dev/null 2>&1; then echo \"Docker is already installed.\"; else curl -fsSL https://get.docker.com | sh; fi",
       "sudo systemctl enable --now docker",
       "sudo usermod -aG docker ${var.adminUser}",
