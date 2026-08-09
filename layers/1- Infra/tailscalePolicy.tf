@@ -50,6 +50,7 @@ resource "tailscale_acl" "home_mesh_policy" {
           "tag:orchestrator:22",
           "tag:mainserver:22",
           "tag:voice:22",
+          "tag:consumer:22",
           "tag:mainserver:8006"
         ]
       },
@@ -125,6 +126,7 @@ resource "tailscale_acl" "home_mesh_policy" {
           "tag:orchestrator",
           "tag:mainserver",
           "tag:voice",
+          "tag:consumer",
           "tag:debug"
         ],
         users = ["${var.adminUser}", "root"],
