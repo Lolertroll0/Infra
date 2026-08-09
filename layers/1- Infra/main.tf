@@ -270,11 +270,11 @@ resource "null_resource" "attach_haos_usb" {
     ]
 
     connection {
-      type        = "ssh"
-      host        = var.mainServer
-      user        = "root"
-      private_key = var.mainKey != "" ? file(var.mainKey) : null
-      timeout     = "5m"
+      type     = "ssh"
+      host     = var.mainServer
+      user     = "root"
+      password = var.adminPassword
+      timeout  = "5m"
     }
   }
 }
