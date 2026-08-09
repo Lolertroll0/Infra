@@ -83,10 +83,8 @@ layers/
 - **Layered Refactor Complete**: Successfully decoupled physical VM / OS provisioning (`1- Infra`) from container application management (`2 - Services`).
 - **HCP Remote State Integration**: Layer 2 reads all node connection IPs, credentials, and SSH keys dynamically from Layer 1's `outputs.tf` via `data.terraform_remote_state.infra.outputs`.
 - **Firefly III Migration**: Deployed Firefly III alongside legacy ezBookKeeping on port 8081. Restored encrypted database secrets from Duplicati backups using `scripts/ff3-vars.sh` over Tailscale SSH without exposing secrets in `.tfstate`.
-- **Orchestrator Ingress Automation**: Automated the registration of Tailscale Virtual Services (`svc:vaultwarden`, `svc:uptime-kuma`, `svc:homeassistant`, `svc:ezbk`, `svc:ff3`) via `scripts/setup-tailscale-serve.sh` executed by Terraform `null_resource`.
-- **CI/CD Pipeline Refactored**: `ci.yml` and `deploy.yml` updated to execute `terraform -chdir="..."` for both layers sequentially. Added `workflow_dispatch` isolation for production deployment triggers to prevent automated merges from deploying.
-- **Security Validation Hardening**: Ran `/sec-validation`. Restricted `tag:ci` SSH permissions to non-root `adminUser` in `tailscalePolicy.tf`. Ensured internal topology endpoints have `sensitive = true` to prevent log leakage. Purged legacy identities and built-in autogroups from Tailscale ACLs to enforce strict RBAC.
-- **Native State Imports**: Added modern Terraform 1.5+ `import {}` blocks for `tailscale_acl.home_mesh_policy` to handle remote state imports cleanly in CI/CD without needing CLI commands or local secrets.
+- **Tailscale Device Tagging & Virtual Services Ingress**: Added `tailscale_device_tags` resource in Layer 1 to enforce `tag:orchestrator` directly on the `homeserver` node. Configured and approved `svc:ff3` alongside `svc:ezbk`, `svc:homeassistant`, `svc:uptime-kuma`, and `svc:vaultwarden` via Tailscale Serve.
+- **Resource Re-creation (Taint)**: Marked all FF3 (`docker_container.financial_assistant`, `docker_container.financial_assistant_db`, `docker_image.firefly`, `docker_image.firefly_db`, `docker_network.financial_assistant_net`, `docker_volume.financial_assistant_db`) and EZBK (`docker_container.ezbookkeeping`, `docker_image.ezbookkeeping`) resources as **tainted** in HCP Terraform Cloud state for clean rebuild upon next apply.
 
 ---
 
