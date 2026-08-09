@@ -13,7 +13,7 @@ resource "tailscale_acl" "home_mesh_policy" {
     ],
 
     groups = {
-      "group:admin" = ["${var.adminEmail}", "averagelolertroll@gmail.com", "lolertroll@${var.tailnet}", "homeserver@${var.tailnet}", "voicepipeline@${var.tailnet}", "ezbookkeeping@${var.tailnet}"],
+      "group:admin" = ["${var.adminEmail}"],
     },
 
     tagOwners = {
@@ -56,7 +56,7 @@ resource "tailscale_acl" "home_mesh_policy" {
 
       {
         action = "accept"
-        src    = ["tag:consumer", "group:admin", "autogroup:admin", "autogroup:member"]
+        src    = ["tag:consumer", "group:admin"]
         dst = [
           "tag:orchestrator:*",
           "tag:mainserver:22",
@@ -100,9 +100,7 @@ resource "tailscale_acl" "home_mesh_policy" {
         action = "accept",
         src = [
           "tag:consumer",
-          "group:admin",
-          "autogroup:admin",
-          "autogroup:member"
+          "group:admin"
         ],
         dst = [
           "tag:orchestrator",

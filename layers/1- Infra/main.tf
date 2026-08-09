@@ -264,18 +264,8 @@ resource "null_resource" "attach_haos_usb" {
     usb_device = var.homeAssistantUSB
   }
 
-  provisioner "remote-exec" {
-    inline = [
-      "qm set ${proxmox_vm_qemu.HomeAssistantOS.vmid} -usb0 host=${var.homeAssistantUSB}"
-    ]
-
-    connection {
-      type        = "ssh"
-      host        = var.mainServer
-      user        = "root"
-      private_key = var.mainKey != "" ? file(var.mainKey) : null
-      timeout     = "5m"
-    }
+  provisioner "local-exec" {
+    command = "if command -v sshpass >/dev/null 2>&1; then sshpass -p '${var.adminPassword}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${var.mainServer} 'qm set ${proxmox_vm_qemu.HomeAssistantOS.vmid} -usb0 host=${var.homeAssistantUSB}'; else ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${var.mainServer} 'qm set ${proxmox_vm_qemu.HomeAssistantOS.vmid} -usb0 host=${var.homeAssistantUSB}'; fi"
   }
 }
 

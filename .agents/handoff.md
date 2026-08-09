@@ -83,8 +83,10 @@ layers/
 - **Layered Refactor Complete**: Successfully decoupled physical VM / OS provisioning (`1- Infra`) from container application management (`2 - Services`).
 - **HCP Remote State Integration**: Layer 2 reads all node connection IPs, credentials, and SSH keys dynamically from Layer 1's `outputs.tf` via `data.terraform_remote_state.infra.outputs`.
 - **Firefly III Migration**: Deployed Firefly III alongside legacy ezBookKeeping on port 8081. Restored encrypted database secrets from Duplicati backups using `scripts/ff3-vars.sh` over Tailscale SSH without exposing secrets in `.tfstate`.
-- **Security Validation Hardening**: Ran `/sec-validation`. Restricted `tag:ci` SSH permissions to non-root `adminUser` in `tailscalePolicy.tf`. Docker image tags pinned to immutable releases (`fireflyiii/core:version-6.6`, `mariadb:11.4`, `vaultwarden/server:1.37.1`).
-- **Docker Provider Assignment**: All 10 application containers in `layers/2 - Services/main.tf` explicitly target their corresponding SSH Docker providers (`docker.orchestrator`, `docker.otherServices`, `docker.voicePipeline`).
+- **Orchestrator Ingress Automation**: Automated the registration of Tailscale Virtual Services (`svc:vaultwarden`, `svc:uptime-kuma`, `svc:homeassistant`, `svc:ezbk`, `svc:ff3`) via `scripts/setup-tailscale-serve.sh` executed by Terraform `null_resource`.
+- **CI/CD Pipeline Refactored**: `ci.yml` and `deploy.yml` updated to execute `terraform -chdir="..."` for both layers sequentially. Added `workflow_dispatch` isolation for production deployment triggers to prevent automated merges from deploying.
+- **Security Validation Hardening**: Ran `/sec-validation`. Restricted `tag:ci` SSH permissions to non-root `adminUser` in `tailscalePolicy.tf`. Ensured internal topology endpoints have `sensitive = true` to prevent log leakage. Purged legacy identities and built-in autogroups from Tailscale ACLs to enforce strict RBAC.
+- **Native State Imports**: Added modern Terraform 1.5+ `import {}` blocks for `tailscale_acl.home_mesh_policy` to handle remote state imports cleanly in CI/CD without needing CLI commands or local secrets.
 
 ---
 
@@ -93,8 +95,8 @@ layers/
 ### Core Infrastructure & Cleanup
 - [x] Refactor monolith into `layers/1- Infra/` and `layers/2 - Services/`.
 - [x] Configure HCP Remote State data source bindings in Layer 2.
+- [x] Remove legacy root-level `.tf` files (`images.tf`, `mainServer.tf`, `orchestrator.tf`, `providers.tf`, `voicePipeline.tf`, `tailscalePolicy.tf`) after confirming clean plan in both layers.
 - [ ] Set up HCP Terraform Run Triggers so an apply in `infrastructure-layer` automatically triggers a plan in `services-layer`.
-- [ ] Remove legacy root-level `.tf` files (`images.tf`, `mainServer.tf`, `orchestrator.tf`, `providers.tf`, `voicePipeline.tf`, `tailscalePolicy.tf`) after confirming clean plan in both layers.
 
 ### Data Migration & Application Stack
 - [x] Deploy Firefly III container stack on `otherServices` node (port 8081).
@@ -102,9 +104,11 @@ layers/
 - [ ] Verify financial data import/restore in Firefly III.
 - [ ] Decommission legacy `ezBookKeeping` container and update Caddy `svc:ezbk` route directly to Firefly III.
 
-### CI/CD & Security
+### CI/CD, Backups, & Security
 - [x] Restrict `tag:ci` SSH access in Tailscale ACLs to non-root `adminUser`.
-- [ ] Update GitHub Actions workflows (`ci.yml`, `deploy.yml`) to support two-layer directory execution (`cd layers/1- Infra` then `cd layers/2 - Services`).
+- [x] Update GitHub Actions workflows (`ci.yml`, `deploy.yml`) to support two-layer directory execution (`cd layers/1- Infra` then `cd layers/2 - Services`).
+- [x] Fix relative log redirect pathing for sequential CI PR comment outputs.
+- [ ] Design and implement comprehensive backup/recovery strategy for Docker volumes (Duplicati) and Proxmox VMs.
 
 ---
 
@@ -113,3 +117,5 @@ layers/
 - **Multi-State Decoupling**: Separating VM management from Docker containers eliminates cross-resource locks, speeds up plan cycles, and prevents container recreation when Proxmox metadata changes.
 - **Zero-Variable Service Layer**: Layer 2 uses `data.terraform_remote_state` to dynamically discover IP addresses and SSH keys from Layer 1, eliminating variable duplication across workspaces.
 - **Least Privilege SSH Access**: Restricting CI runners (`tag:ci`) to non-root users prevents potential repository compromise from resulting in full hypervisor takeover.
+- **Keyless SSH via Tailscale**: By passing empty strings as SSH keys in CI, the Terraform Docker provider falls back to using Tailscale's cryptographic machine identity for authorization, keeping zero static keys in GitHub Secrets.
+- **Native HCL Imports**: Using the Terraform 1.5+ `import {}` block natively handles state import logic (e.g. for `tailscale_acl`) inside CI workflows, preventing the need for ad-hoc CLI commands handling remote state authentication.

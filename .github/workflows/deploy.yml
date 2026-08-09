@@ -27,7 +27,7 @@ jobs:
       TF_VAR_tailscaleMainAuthKey: ${{ secrets.TAILSCALE_MAIN_AUTH_KEY }}
       TF_VAR_tailscaleVoiceAuthKey: ${{ secrets.TAILSCALE_VOICE_AUTH_KEY }}
 
-      TF_VAR_mainKey: ""
+      TF_VAR_mainKey: "secrets."
       TF_VAR_mainKeyPublic: ""
       TF_VAR_orchestratorKey: ""
       TF_VAR_orchestratorKeyPublic: ""

@@ -16,19 +16,23 @@ variable "adminPassword" {
 
 # --- INFRASTRUCTURE NODE CONNECTIONS (IPs / Hostnames) ---
 variable "mainServer" {
-  type = string
+  type      = string
+  sensitive = true
 }
 
 variable "orchestrator" {
-  type = string
+  type      = string
+  sensitive = true
 }
 
 variable "voicePipeline" {
-  type = string
+  type      = string
+  sensitive = true
 }
 
 variable "otherServicesIP" {
-  type = string
+  type      = string
+  sensitive = true
 }
 
 # --- SSH PRIVATE KEYS ---
@@ -54,7 +58,8 @@ variable "otherServicesKey" {
 
 # --- TAILSCALE & SECRET INJECTION ---
 variable "tailnet" {
-  type = string
+  type      = string
+  sensitive = true
 }
 
 variable "tailscaleSecret" {
@@ -127,12 +132,14 @@ variable "ezbkTemplate" {
 
 variable "homeAssistantIP" {
   type        = string
+  sensitive   = true
   description = "IP address of the Home Assistant OS VM"
   default     = "192.168.1.103"
 }
 
 variable "networkGateway" {
   type        = string
+  sensitive   = true
   description = "Network gateway for static IP configurations"
   default     = "192.168.1.1"
 }
