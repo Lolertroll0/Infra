@@ -64,6 +64,9 @@ jobs:
           tags: tag:ci
 
       # 2. Layer 1: Infrastructure Deployment
+      - name: Import Tailscale Policy (Layer 1 - Infra)
+        run: terraform -chdir="layers/1- Infra" import tailscale_acl.home_mesh_policy home_mesh_policy || true
+
       - name: Terraform Init & Apply (Layer 1 - Infra)
         run: |
           terraform -chdir="layers/1- Infra" init
