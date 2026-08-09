@@ -77,6 +77,8 @@ resource "tailscale_acl" "home_mesh_policy" {
         dst = [
           "tag:mainserver:8123",   # Home Assistant OS
           "tag:mainserver:8080",   # ezBookKeeping Backend
+          "tag:consumer:8080",     # ezBookKeeping Backend (otherServices)
+          "tag:consumer:8081",     # Firefly III Backend (otherServices)
           "svc:ezbk:443",          # ezBookKeeping Virtual Service
           "svc:homeassistant:443", # Home Assistant OS Virtual Service
           "svc:vaultwarden:443",   # Vaultwarden Virtual Service
