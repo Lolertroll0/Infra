@@ -73,8 +73,10 @@ jobs:
       # 3. Layer 2: Services Deployment
       - name: Reconcile Docker State (Layer 2 - Services)
         run: |
-          echo "Reconciling legacy containers..."
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.ADMIN_USER }}@${{ secrets.OTHER_SERVICES_IP }} "docker rm -f ezbookkeeping || true" 2>/dev/null || true
+          echo "Reconciling unmanaged Docker containers for initial state adoption..."
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.ADMIN_USER }}@${{ secrets.ORCHESTRATOR_URL }} "docker rm -f caddyProxy uptimeKuma vaultwarden duplicati || true" 2>/dev/null || true
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.ADMIN_USER }}@${{ secrets.OTHER_SERVICES_IP }} "docker rm -f ezbookkeeping financial_assistant financial_assistant_db || true" 2>/dev/null || true
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.ADMIN_USER }}@${{ secrets.VOICE_PIPELINE_URL }} "docker rm -f whisper piper ollama || true" 2>/dev/null || true
 
       - name: Terraform Init & Apply (Layer 2 - Services)
         run: |
