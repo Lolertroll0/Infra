@@ -82,7 +82,7 @@ jobs:
           TF_VAR_ezbkTemplate: ${{ vars.EZBK_TEMPLATE }}
           TF_VAR_homeAssistantUSB: ${{ vars.HOME_ASSISTANT_USB }}
         run: |
-          terraform -chdir="layers/1- Infra" plan -out=infra.tfplan -input=false -no-color > infra_plan.log
+          terraform -chdir="layers/1- Infra" plan -out=infra.tfplan -input=false -no-color > "$GITHUB_WORKSPACE/infra_plan.log"
 
       # 4. Layer 2: Services Operations
       - name: Terraform Init (Layer 2 - Services)
@@ -94,7 +94,7 @@ jobs:
       - name: Terraform Plan (Layer 2 - Services)
         id: plan_services
         run: |
-          terraform -chdir="layers/2 - Services" plan -out=services.tfplan -input=false -no-color > services_plan.log
+          terraform -chdir="layers/2 - Services" plan -out=services.tfplan -input=false -no-color > "$GITHUB_WORKSPACE/services_plan.log"
 
       # 5. Send Combined Plan to PR Comment
       - name: Send combined plan to PR comment
@@ -103,12 +103,12 @@ jobs:
         run: |
           echo "### Layer 1 (Infra) Plan Output 📝" > pr_plan.txt
           echo "\`\`\`terraform" >> pr_plan.txt
-          tail -c 25000 layers/1-\ Infra/infra_plan.log >> pr_plan.txt
+          tail -c 25000 "$GITHUB_WORKSPACE/infra_plan.log" >> pr_plan.txt || true
           echo "\`\`\`" >> pr_plan.txt
           echo "" >> pr_plan.txt
           echo "### Layer 2 (Services) Plan Output 📝" >> pr_plan.txt
           echo "\`\`\`terraform" >> pr_plan.txt
-          tail -c 25000 layers/2\ -\ Services/services_plan.log >> pr_plan.txt
+          tail -c 25000 "$GITHUB_WORKSPACE/services_plan.log" >> pr_plan.txt || true
           echo "\`\`\`" >> pr_plan.txt
           gh pr comment ${{ github.event.pull_request.number }} --body-file pr_plan.txt
 
