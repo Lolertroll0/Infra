@@ -36,12 +36,6 @@ jobs:
       - name: Terraform Format (Layer 1 - Infra)
         run: terraform -chdir="layers/1- Infra" fmt -check
 
-      - name: Import Tailscale Policy (Layer 1 - Infra)
-        env:
-          TF_VAR_tailscaleSecret: ${{ secrets.TAILSCALE_API_KEY }}
-          TF_VAR_tailnet: ${{ secrets.TAILNET }}
-        run: terraform -chdir="layers/1- Infra" import tailscale_acl.home_mesh_policy home_mesh_policy || true
-
       - name: Terraform Plan (Layer 1 - Infra)
         id: plan_infra
         env:
