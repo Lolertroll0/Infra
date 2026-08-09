@@ -1,3 +1,22 @@
+# Import existing Docker networks into Layer 2 state
+import {
+  to       = docker_network.orchestratorInternal
+  id       = "orchestratorInternal"
+  provider = docker.orchestrator
+}
+
+import {
+  to       = docker_network.financial_assistant_net
+  id       = "financial_assistant_net"
+  provider = docker.otherServices
+}
+
+import {
+  to       = docker_network.voicePipelineInternal
+  id       = "voicePipelineInternal"
+  provider = docker.voicePipeline
+}
+
 resource "docker_container" "uptimeKuma" {
   provider = docker.orchestrator
   name     = "uptimeKuma"
