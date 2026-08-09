@@ -1,3 +1,69 @@
+# Native Imports for Existing Infrastructure
+import {
+  to = docker_network.orchestratorInternal
+  id = "orchestratorInternal"
+}
+
+import {
+  to = docker_network.financial_assistant_net
+  id = "financial_assistant_net"
+}
+
+import {
+  to = docker_network.voicePipelineInternal
+  id = "voicePipelineInternal"
+}
+
+import {
+  to = docker_container.ezbookkeeping
+  id = "ezbookkeeping"
+}
+
+import {
+  to = docker_container.uptimeKuma
+  id = "uptimeKuma"
+}
+
+import {
+  to = docker_container.caddyProxy
+  id = "caddyProxy"
+}
+
+import {
+  to = docker_container.vaultWarden
+  id = "vaultwarden"
+}
+
+import {
+  to = docker_container.duplicati
+  id = "duplicati"
+}
+
+import {
+  to = docker_container.financial_assistant
+  id = "financial_assistant"
+}
+
+import {
+  to = docker_container.financial_assistant_db
+  id = "financial_assistant_db"
+}
+
+import {
+  to = docker_container.whisper
+  id = "whisper"
+}
+
+import {
+  to = docker_container.piper
+  id = "piper"
+}
+
+import {
+  to = docker_container.ollama
+  id = "ollama"
+}
+
 resource "docker_container" "uptimeKuma" {
   provider = docker.orchestrator
   name     = "uptimeKuma"
