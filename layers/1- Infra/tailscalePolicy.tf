@@ -137,3 +137,12 @@ resource "tailscale_acl" "home_mesh_policy" {
 
   })
 }
+
+data "tailscale_device" "homeserver" {
+  name = "homeserver.tailded50c.ts.net"
+}
+
+resource "tailscale_device_tags" "homeserver_tags" {
+  device_id = data.tailscale_device.homeserver.id
+  tags      = ["tag:orchestrator"]
+}
