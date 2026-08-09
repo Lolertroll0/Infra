@@ -1,3 +1,8 @@
+import {
+  to = tailscale_acl.home_mesh_policy
+  id = var.tailnet
+}
+
 resource "tailscale_acl" "home_mesh_policy" {
   acl = jsonencode({
 
@@ -124,7 +129,7 @@ resource "tailscale_acl" "home_mesh_policy" {
           "tag:voice",
           "tag:debug"
         ],
-        users = ["${var.adminUser}"],
+        users = ["${var.adminUser}", "root"],
       }
     ],
 
