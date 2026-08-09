@@ -265,7 +265,7 @@ resource "null_resource" "attach_haos_usb" {
   }
 
   provisioner "local-exec" {
-    command = "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${var.mainServer} 'qm set ${proxmox_vm_qemu.HomeAssistantOS.vmid} -usb0 host=${var.homeAssistantUSB}'"
+    command = "if command -v sshpass >/dev/null 2>&1; then sshpass -p '${var.adminPassword}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${var.mainServer} 'qm set ${proxmox_vm_qemu.HomeAssistantOS.vmid} -usb0 host=${var.homeAssistantUSB}'; else ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${var.mainServer} 'qm set ${proxmox_vm_qemu.HomeAssistantOS.vmid} -usb0 host=${var.homeAssistantUSB}'; fi"
   }
 }
 
