@@ -1,67 +1,80 @@
 # Native Imports for Existing Infrastructure
 import {
-  to = docker_network.orchestratorInternal
-  id = "orchestratorInternal"
+  to       = docker_network.orchestratorInternal
+  id       = "orchestratorInternal"
+  provider = docker.orchestrator
 }
 
 import {
-  to = docker_network.financial_assistant_net
-  id = "financial_assistant_net"
+  to       = docker_network.financial_assistant_net
+  id       = "financial_assistant_net"
+  provider = docker.otherServices
 }
 
 import {
-  to = docker_network.voicePipelineInternal
-  id = "voicePipelineInternal"
+  to       = docker_network.voicePipelineInternal
+  id       = "voicePipelineInternal"
+  provider = docker.voicePipeline
 }
 
 import {
-  to = docker_container.ezbookkeeping
-  id = "ezbookkeeping"
+  to       = docker_container.ezbookkeeping
+  id       = "ezbookkeeping"
+  provider = docker.otherServices
 }
 
 import {
-  to = docker_container.uptimeKuma
-  id = "uptimeKuma"
+  to       = docker_container.uptimeKuma
+  id       = "uptimeKuma"
+  provider = docker.orchestrator
 }
 
 import {
-  to = docker_container.caddyProxy
-  id = "caddyProxy"
+  to       = docker_container.caddyProxy
+  id       = "caddyProxy"
+  provider = docker.orchestrator
 }
 
 import {
-  to = docker_container.vaultWarden
-  id = "vaultwarden"
+  to       = docker_container.vaultWarden
+  id       = "vaultwarden"
+  provider = docker.orchestrator
 }
 
 import {
-  to = docker_container.duplicati
-  id = "duplicati"
+  to       = docker_container.duplicati
+  id       = "duplicati"
+  provider = docker.orchestrator
 }
 
 import {
-  to = docker_container.financial_assistant
-  id = "financial_assistant"
+  to       = docker_container.financial_assistant
+  id       = "financial_assistant"
+  provider = docker.otherServices
 }
 
 import {
-  to = docker_container.financial_assistant_db
-  id = "financial_assistant_db"
+  to       = docker_container.financial_assistant_db
+  id       = "financial_assistant_db"
+  provider = docker.otherServices
 }
 
 import {
-  to = docker_container.whisper
-  id = "whisper"
+  to       = docker_container.whisper
+  id       = "whisper"
+  provider = docker.voicePipeline
 }
 
 import {
-  to = docker_container.piper
-  id = "piper"
+  to       = docker_container.piper
+  id       = "piper"
+  provider = docker.voicePipeline
 }
 
 import {
-  to = docker_container.ollama
-  id = "ollama"
+  to       = docker_container.ollama
+  id       = "ollama"
+  provider = docker.voicePipeline
 }
 
 resource "docker_container" "uptimeKuma" {
