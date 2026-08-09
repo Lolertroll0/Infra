@@ -33,7 +33,7 @@ resource "null_resource" "setup_financial_assistant" {
   }
 
   provisioner "local-exec" {
-    command = "bash ${path.module}/scripts/ff3-vars.sh"
+    command = "bash ${path.module}/../../scripts/ff3-vars.sh"
     environment = {
       GDRIVE_AUTH_ID = var.gDriveAuthID
       PASSPHRASE     = var.adminPassword
