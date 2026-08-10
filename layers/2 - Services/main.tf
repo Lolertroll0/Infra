@@ -174,9 +174,10 @@ resource "null_resource" "firefly_db_migration" {
 
     connection {
       type        = "ssh"
-      user        = local.infra.adminUser
-      private_key = local.infra.ssh_private_key
-      host        = local.infra.otherServicesIP
+      user        = data.terraform_remote_state.infra.outputs.adminUser
+      private_key = data.terraform_remote_state.infra.outputs.otherServicesKey != "" ? data.terraform_remote_state.infra.outputs.otherServicesKey : null
+      password    = data.terraform_remote_state.infra.outputs.adminPassword
+      host        = data.terraform_remote_state.infra.outputs.otherServicesIP
     }
   }
 }
