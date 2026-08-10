@@ -76,11 +76,10 @@ resource "tailscale_acl" "home_mesh_policy" {
         src    = ["tag:orchestrator"],
         dst = [
           "tag:mainserver:8123",   # Home Assistant OS
-          "tag:mainserver:8080",   # ezBookKeeping Backend
+          "tag:mainserver:8080",   # ezBookKeeping Backend (mainserver)
+          "tag:mainserver:8081",   # Firefly III Backend (mainserver)
           "tag:consumer:8080",     # ezBookKeeping Backend (otherServices)
           "tag:consumer:8081",     # Firefly III Backend (otherServices)
-          "ezbookkeeping.tailded50c.ts.net:8080",
-          "ezbookkeeping.tailded50c.ts.net:8081",
           "svc:ezbk:443",          # ezBookKeeping Virtual Service
           "svc:homeassistant:443", # Home Assistant OS Virtual Service
           "svc:vaultwarden:443",   # Vaultwarden Virtual Service
