@@ -155,6 +155,33 @@ resource "docker_container" "financial_assistant" {
   }
 }
 
+resource "null_resource" "firefly_db_migration" {
+  depends_on = [
+    docker_container.financial_assistant,
+    docker_container.financial_assistant_db
+  ]
+
+  triggers = {
+    firefly_id = docker_container.financial_assistant.id
+    db_id      = docker_container.financial_assistant_db.id
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sleep 5",
+      "docker exec financial_assistant php artisan migrate --force",
+      "docker exec financial_assistant php artisan passport:keys --force || true"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = local.infra.adminUser
+      private_key = local.infra.ssh_private_key
+      host        = local.infra.otherServicesIP
+    }
+  }
+}
+
 resource "docker_container" "ezbookkeeping" {
   name     = "ezbookkeeping"
   image    = docker_image.ezbookkeeping.name
