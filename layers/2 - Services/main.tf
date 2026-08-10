@@ -162,8 +162,7 @@ resource "null_resource" "firefly_db_migration" {
   ]
 
   triggers = {
-    firefly_id = docker_container.financial_assistant.id
-    db_id      = docker_container.financial_assistant_db.id
+    always_run = timestamp()
   }
 
   provisioner "remote-exec" {

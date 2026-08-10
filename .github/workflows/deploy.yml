@@ -68,14 +68,14 @@ jobs:
         run: |
           terraform -chdir="layers/1- Infra" init
           terraform -chdir="layers/1- Infra" plan -out=infra.tfplan -input=false
-          terraform -chdir="layers/1- Infra" apply -auto-approve -input=false infra.tfplan 2>&1 > infra_apply.log
+          terraform -chdir="layers/1- Infra" apply -input=false infra.tfplan > infra_apply.log 2>&1
 
       # 3. Layer 2: Services Deployment
       - name: Terraform Init & Apply (Layer 2 - Services)
         run: |
           terraform -chdir="layers/2 - Services" init
           terraform -chdir="layers/2 - Services" plan -out=services.tfplan -input=false
-          terraform -chdir="layers/2 - Services" apply -auto-approve -input=false services.tfplan 2>&1 > services_apply.log
+          terraform -chdir="layers/2 - Services" apply -input=false services.tfplan > services_apply.log 2>&1
 
       # 4. Capture Failure Logs
       - name: Capture Failure Logs
