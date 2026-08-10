@@ -84,6 +84,7 @@ layers/
 - **HCP Remote State Integration**: Layer 2 reads all node connection IPs, credentials, and SSH keys dynamically from Layer 1's `outputs.tf` via `data.terraform_remote_state.infra.outputs`.
 - **Firefly III Migration**: Deployed Firefly III alongside legacy ezBookKeeping on port 8081. Restored encrypted database secrets from Duplicati backups using `scripts/ff3-vars.sh` over Tailscale SSH without exposing secrets in `.tfstate`.
 - **Tailscale Device Tagging & Virtual Services Ingress**: Added `tailscale_device_tags` resource in Layer 1 to enforce `tag:orchestrator` directly on the `homeserver` node. Configured and approved `svc:ff3` alongside `svc:ezbk`, `svc:homeassistant`, `svc:uptime-kuma`, and `svc:vaultwarden` via Tailscale Serve.
+- **Automated Database Migrations**: Added `null_resource.firefly_db_migration` in Layer 2 to automatically execute `php artisan migrate --force` and Passport key generation whenever Firefly containers or databases are provisioned or recreated.
 - **Resource Re-creation (Taint)**: Marked all FF3 (`docker_container.financial_assistant`, `docker_container.financial_assistant_db`, `docker_image.firefly`, `docker_image.firefly_db`, `docker_network.financial_assistant_net`, `docker_volume.financial_assistant_db`) and EZBK (`docker_container.ezbookkeeping`, `docker_image.ezbookkeeping`) resources as **tainted** in HCP Terraform Cloud state for clean rebuild upon next apply.
 
 ---
