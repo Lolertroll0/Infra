@@ -27,16 +27,16 @@ jobs:
       TF_VAR_tailscaleMainAuthKey: ${{ secrets.TAILSCALE_MAIN_AUTH_KEY }}
       TF_VAR_tailscaleVoiceAuthKey: ${{ secrets.TAILSCALE_VOICE_AUTH_KEY }}
 
-      TF_VAR_mainKey: "secrets."
-      TF_VAR_mainKeyPublic: ""
-      TF_VAR_orchestratorKey: ""
-      TF_VAR_orchestratorKeyPublic: ""
-      TF_VAR_voiceKey: ""
-      TF_VAR_voiceKeyPublic: ""
-      TF_VAR_otherServicesKey: ""
-      TF_VAR_otherServicesKeyPublic: ""
-      TF_VAR_homeAssistantKey: ""
-      TF_VAR_homeAssistantKeyPublic: ""
+      TF_VAR_mainKey: ${{ secrets.MAIN_KEY }}
+      TF_VAR_mainKeyPublic: ${{ secrets.MAIN_KEY_PUBLIC }}
+      TF_VAR_orchestratorKey: ${{ secrets.ORCHESTRATOR_KEY }}
+      TF_VAR_orchestratorKeyPublic: ${{ secrets.ORCHESTRATOR_KEY_PUBLIC }}
+      TF_VAR_voiceKey: ${{ secrets.VOICE_KEY }}
+      TF_VAR_voiceKeyPublic: ${{ secrets.VOICE_KEY_PUBLIC }}
+      TF_VAR_otherServicesKey: ${{ secrets.OTHER_SERVICES_KEY }}
+      TF_VAR_otherServicesKeyPublic: ${{ secrets.OTHER_SERVICES_KEY_PUBLIC }}
+      TF_VAR_homeAssistantKey: ${{ secrets.HOME_ASSISTANT_KEY }}
+      TF_VAR_homeAssistantKeyPublic: ${{ secrets.HOME_ASSISTANT_KEY_PUBLIC }}
 
       TF_VAR_proxmoxAPI: ${{ secrets.PROXMOX_API_URL }}
       TF_VAR_proxmoxTokenId: ${{ secrets.PROXMOX_TOKEN_ID }}
