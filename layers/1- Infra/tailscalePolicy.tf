@@ -79,6 +79,8 @@ resource "tailscale_acl" "home_mesh_policy" {
           "tag:mainserver:8080",   # ezBookKeeping Backend
           "tag:consumer:8080",     # ezBookKeeping Backend (otherServices)
           "tag:consumer:8081",     # Firefly III Backend (otherServices)
+          "ezbookkeeping.tailded50c.ts.net:8080",
+          "ezbookkeeping.tailded50c.ts.net:8081",
           "svc:ezbk:443",          # ezBookKeeping Virtual Service
           "svc:homeassistant:443", # Home Assistant OS Virtual Service
           "svc:vaultwarden:443",   # Vaultwarden Virtual Service
@@ -145,4 +147,13 @@ data "tailscale_device" "homeserver" {
 resource "tailscale_device_tags" "homeserver_tags" {
   device_id = data.tailscale_device.homeserver.id
   tags      = ["tag:orchestrator"]
+}
+
+data "tailscale_device" "ezbookkeeping" {
+  name = "ezbookkeeping.tailded50c.ts.net"
+}
+
+resource "tailscale_device_tags" "ezbookkeeping_tags" {
+  device_id = data.tailscale_device.ezbookkeeping.id
+  tags      = ["tag:consumer"]
 }
