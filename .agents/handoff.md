@@ -128,8 +128,12 @@ layers/
 - **Native HCL Imports**: Using the Terraform 1.5+ `import {}` block natively handles state import logic (e.g. for `tailscale_acl`) inside CI workflows, preventing the need for ad-hoc CLI commands handling remote state authentication.
 - **Reverse Proxy Scheme Forwarding (`X-Forwarded-Proto`)**: When Caddy sits behind a TLS-terminating ingress gateway (Tailscale Serve) and listens locally on HTTP port 80, Caddy's default `reverse_proxy` behavior sets `X-Forwarded-Proto: {http.request.scheme}` (evaluating to `http`). For HTTPS-sensitive web applications like Firefly III (Laravel), explicitly passing `header_up X-Forwarded-Proto https` in `caddyfile` guarantees that downstream applications evaluate `$request->secure()` as true and output matching HTTPS base URIs.
 - **LM Studio Systemd Daemon Execution Mode**: Configured `lmstudio.service` with `Type=oneshot` and `RemainAfterExit=yes` because `lms server start` launches the server backend as a background daemon and exits with status 0. Added `ExecStop=/usr/local/bin/lms server stop` and added `/home/${var.adminUser}/.lmstudio/bin` to service `PATH`.
+- **LM Studio CPU Backend Dependency (`libgomp1`)**: Headless `llama-server` binaries packaged with LM Studio require GNU OpenMP (`libgomp.so.1`) for multi-threaded CPU matrix operations. Fixed exit code `127` during `lms load` by installing `libgomp1` on the host OS and adding it to `null_resource.setup_voicePipelineEnvironment`.
+- **Docker Host Gateway Firewalling (UFW Port 1234)**: When containerized frontends (Open WebUI) address host daemons (LM Studio) via `host.docker.internal` (`172.17.0.1:1234`), UFW on the host OS blocks inter-interface bridge traffic by default. Allowed `1234/tcp` in UFW (`sudo ufw allow 1234/tcp`), resolving 500 Connection Timeout Errors and unlocking model population in Open WebUI.
 - **Caddy Upstream Hostname Exact Match**: Fixed hostname typo in `caddyfile` from `voice-pipeline` to `voicepipeline` (matching the exact Tailscale MagicDNS node hostname), resolving 502 Bad Gateway proxy errors.
 - **Tailscale Virtual Services (`svc:...`) Control Plane Propagation**: New Virtual Services added to `tailscalePolicy.tf` (`autoApprovers.services`) must be applied via `terraform apply` in Layer 1 (`Deploy Infra` workflow in GitHub Actions) to sync with `api.tailscale.com`. Once approved by Tailscale Control Plane and registered via `sudo /tmp/setup-tailscale-serve.sh` on Orchestrator, MagicDNS allocates virtual IPs (`100.x.y.z`) and routes TLS-terminated HTTPS traffic cleanly to Caddy.
+
+
 
 
 

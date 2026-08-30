@@ -135,6 +135,8 @@ resource "null_resource" "setup_voicePipelineEnvironment" {
       "sudo usermod -aG docker ${var.adminUser}",
       "if command -v tailscale >/dev/null 2>&1; then echo \"Tailscale is already installed.\"; else curl -fsSL https://tailscale.com/install.sh | sudo sh; fi",
       "if ! sudo tailscale status >/dev/null 2>&1; then sudo tailscale up --authkey=${var.tailscaleVoiceAuthKey} --ssh --accept-risk=lose-ssh; fi",
+      "sudo apt-get update && sudo apt-get install -y libgomp1",
+      "if command -v ufw >/dev/null 2>&1; then sudo ufw allow 1234/tcp; fi",
       "mkdir -p ${local.data_dir}/lmstudio/",
       "mkdir -p ${local.data_dir}/open-webui/"
     ]
