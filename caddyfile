@@ -27,10 +27,11 @@ http://ff3.${tailnet} {
 }
 
 http://chat.${tailnet} {
-	reverse_proxy voice-pipeline.${tailnet}:8080
+	reverse_proxy voicepipeline.${tailnet}:8080
 }
 
 http://lmstudio.${tailnet} {
-	reverse_proxy voice-pipeline.${tailnet}:1234
+	reverse_proxy voicepipeline.${tailnet}:1234
 }
+
 

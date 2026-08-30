@@ -3,13 +3,13 @@ Description=LM Studio Headless Local AI Server
 After=network.target tailscaled.service
 
 [Service]
-Type=simple
+Type=oneshot
+RemainAfterExit=yes
 User=${adminUser}
 WorkingDirectory=/home/${adminUser}
 ExecStart=/usr/local/bin/lms server start --port 1234 --cors --bind 0.0.0.0
-Restart=always
-RestartSec=5
-Environment=PATH=/usr/local/bin:/usr/bin:/bin:/home/${adminUser}/.local/bin:/home/${adminUser}/.cache/lm-studio/bin
+ExecStop=/usr/local/bin/lms server stop
+Environment=PATH=/usr/local/bin:/usr/bin:/bin:/home/${adminUser}/.local/bin:/home/${adminUser}/.lmstudio/bin
 
 [Install]
 WantedBy=multi-user.target

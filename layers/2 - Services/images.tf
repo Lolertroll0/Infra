@@ -15,8 +15,9 @@ resource "docker_image" "vaultWarden" {
 # AI Node Resources
 resource "docker_image" "open_webui" {
   provider = docker.voicePipeline
-  name     = "ghcr.io/open-webui/open-webui:v0.5.20"
+  name     = "ghcr.io/open-webui/open-webui:v0.11.1"
 }
+
 
 
 # Main Server Resources
