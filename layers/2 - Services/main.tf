@@ -11,11 +11,6 @@ import {
   provider = docker.otherServices
 }
 
-import {
-  to       = docker_network.voicePipelineInternal
-  id       = "voicePipelineInternal"
-  provider = docker.voicePipeline
-}
 
 resource "docker_container" "uptimeKuma" {
   provider = docker.orchestrator
@@ -249,66 +244,32 @@ resource "docker_container" "financial_assistant_db" {
   entrypoint = ["/custom-entrypoint.sh"]
 }
 
-resource "docker_container" "whisper" {
+resource "docker_container" "open_webui" {
   provider = docker.voicePipeline
-  name     = "whisper"
-  image    = docker_image.whisper.name
+  name     = "open-webui"
+  image    = docker_image.open_webui.name
   restart  = "unless-stopped"
 
-  ports {
-    internal = 10300
-    external = 10300
-  }
-  volumes {
-    container_path = "/data"
-    host_path      = "${local.data_dir}/whisper"
-  }
-  networks_advanced {
-    name = docker_network.voicePipelineInternal.name
-  }
-}
-
-resource "docker_container" "piper" {
-  provider = docker.voicePipeline
-  name     = "piper"
-  image    = docker_image.piper.name
-  command  = ["--voice", "en_US-lessac-medium"]
-  restart  = "unless-stopped"
-
-  ports {
-    internal = 10200
-    external = 10200
-  }
-  volumes {
-    container_path = "/data"
-    host_path      = "${local.data_dir}/piper"
-  }
-  networks_advanced {
-    name = docker_network.voicePipelineInternal.name
-  }
-}
-
-resource "docker_container" "ollama" {
-  provider = docker.voicePipeline
-  name     = "ollama"
-  image    = docker_image.ollama.name
-  restart  = "unless-stopped"
-
-  ports {
-    internal = 11434
-    external = 11434
-  }
   ports {
     internal = 8080
     external = 8080
   }
 
-  volumes {
-    container_path = "/data"
-    host_path      = "${local.data_dir}/ollama"
+  env = [
+    "OPENAI_API_BASE_URL=http://host.docker.internal:1234/v1",
+    "OPENAI_API_KEY=lm-studio",
+    "WEBUI_AUTH=false",
+    "ENABLE_OLLAMA_API=false"
+  ]
+
+  host {
+    host = "host.docker.internal"
+    ip   = "host-gateway"
   }
-  networks_advanced {
-    name = docker_network.voicePipelineInternal.name
+
+  volumes {
+    container_path = "/app/backend/data"
+    host_path      = "${local.data_dir}/open-webui"
   }
 }
 
@@ -325,9 +286,4 @@ resource "docker_network" "financial_assistant_net" {
   internal = false
 }
 
-resource "docker_network" "voicePipelineInternal" {
-  provider = docker.voicePipeline
-  name     = "voicePipelineInternal"
-  internal = false
-}
 

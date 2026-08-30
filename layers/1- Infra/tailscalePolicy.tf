@@ -32,6 +32,8 @@ resource "tailscale_acl" "home_mesh_policy" {
         "svc:homeassistant" = ["tag:orchestrator"]
         "svc:ezbk"          = ["tag:orchestrator"]
         "svc:ff3"           = ["tag:orchestrator"]
+        "svc:lmstudio"      = ["tag:orchestrator"]
+        "svc:chat"          = ["tag:orchestrator"]
       }
     },
 
@@ -62,12 +64,15 @@ resource "tailscale_acl" "home_mesh_policy" {
           "tag:orchestrator:*",
           "tag:mainserver:22",
           "tag:voice:22",
+          "tag:voice:1234",
 
           "svc:vaultwarden:443",
           "svc:uptime-kuma:443",
           "svc:homeassistant:443",
           "svc:ezbk:443",
-          "svc:ff3:443"
+          "svc:ff3:443",
+          "svc:lmstudio:443",
+          "svc:chat:443"
         ]
       },
 
@@ -80,11 +85,15 @@ resource "tailscale_acl" "home_mesh_policy" {
           "tag:mainserver:8081",   # Firefly III Backend (mainserver)
           "tag:consumer:8080",     # ezBookKeeping Backend (otherServices)
           "tag:consumer:8081",     # Firefly III Backend (otherServices)
+          "tag:voice:1234",        # LM Studio API
+          "tag:voice:8080",        # Open WebUI
           "svc:ezbk:443",          # ezBookKeeping Virtual Service
           "svc:homeassistant:443", # Home Assistant OS Virtual Service
           "svc:vaultwarden:443",   # Vaultwarden Virtual Service
           "svc:uptime-kuma:443",   # Uptime Kuma Virtual Service
-          "svc:ff3:443"            # FF3 Virtual Service
+          "svc:ff3:443",           # FF3 Virtual Service
+          "svc:lmstudio:443",      # LM Studio Virtual Service
+          "svc:chat:443"           # Open WebUI Virtual Service
         ],
       },
 
@@ -92,9 +101,7 @@ resource "tailscale_acl" "home_mesh_policy" {
         action = "accept",
         src    = ["tag:mainserver"],
         dst = [
-          "tag:voice:10200", # Piper
-          "tag:voice:10300", # Whisper
-          "tag:voice:11434"  # Ollama API
+          "tag:voice:1234" # LM Studio API
         ]
       }
     ],

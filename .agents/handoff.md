@@ -35,12 +35,14 @@ Build a professional-grade, **distributed home lab** managed entirely via **Infr
     - **Duplicati** for state/volume backup operations.
   - Uses a dedicated internal Docker network for orchestrator services.
 
-- **Voice & AI Pipeline Node**
-  - Separate node dedicated to AI/voice workloads.
+- **Local AI Node (formerly Voice & AI Pipeline Node)**
+  - Dedicated x86 node for local LLM inference and text processing (Obsidian Vaults).
+  - Runs natively via `systemd`:
+    - **LM Studio CLI (`lms`)** listening on port `1234` for OpenAI-compatible chat completions and embeddings.
   - Runs Docker with:
-    - **Ollama** for LLMs.
-    - **Whisper** (STT) and **Piper** (TTS) via Wyoming protocol.
-  - Uses its own internal Docker network.
+    - **Open WebUI** on port `8080` for browser-based ad-hoc chat and model testing.
+  - Decommissioned legacy Whisper, Piper, and Ollama containers to dedicate all hardware resources to local LLM inference.
+
 
 - **Networking & security**
   - All nodes join the same **Tailscale tailnet**; no router port forwarding.
@@ -88,6 +90,8 @@ layers/
 - **Systemd-Resolved DNS Resilience**: Hardened `ezBookKeeping` VM (`100.107.51.81`) with public DNS fallbacks (`1.1.1.1 8.8.8.8`) in `/etc/systemd/resolved.conf` and updated Layer 1 `main.tf` inline provisioners to guarantee Docker Hub image pulls (`mariadb:11.4`, `mayswind/ezbookkeeping:1.5`, `fireflyiii/core:version-6.6`) never fail due to transient DNS drops.
 - **CI/CD Workflow Secrets Mapping**: Fixed `.github/workflows/deploy.yml` and `ci.yml` to correctly map all 10 SSH key environment variables (`TF_VAR_mainKey`, `TF_VAR_otherServicesKey`, etc.) from GitHub Secrets.
 - **Resource Re-creation (Taint)**: Marked all FF3 (`docker_container.financial_assistant`, `docker_container.financial_assistant_db`, `docker_image.firefly`, `docker_image.firefly_db`, `docker_network.financial_assistant_net`, `docker_volume.financial_assistant_db`) and EZBK (`docker_container.ezbookkeeping`, `docker_image.ezbookkeeping`) resources as **tainted** in HCP Terraform Cloud state for clean rebuild upon next apply.
+- **Firefly III HTTPS Proxy Header & Base URI Resolution**: Updated `caddyfile` with `header_up X-Forwarded-Proto https` for `http://ff3.${tailnet}` to override Caddy's default `{http.request.scheme}` header behavior (which sent `http` to downstream containers when listening on port 80). Resolved the browser Content Security Policy `base-uri 'self'` violation on `/profile/oauth` and restored 100% of CSS/JS/chart asset rendering across HTTPS.
+- **Local AI Stack Transition (LM Studio & Open WebUI)**: Decommissioned legacy voice containers (Whisper, Piper, Ollama) and network from Layer 2. Automated host-level LM Studio installation, bootstrap, and `systemd` unit creation via `null_resource.setup_voicePipelineEnvironment` in Layer 1. Deployed `open-webui` in Layer 2 connecting to host-level LM Studio via `host.docker.internal:1234`. Registered `svc:lmstudio` and `svc:chat` in `tailscalePolicy.tf`, configured Caddy ingress routes, and added services to `scripts/setup-tailscale-serve.sh`.
 
 ---
 
@@ -102,8 +106,10 @@ layers/
 ### Data Migration & Application Stack
 - [x] Deploy Firefly III container stack on `otherServices` node (port 8081).
 - [x] Run `php artisan migrate --force` and initialize MariaDB schema.
+- [x] Fix Firefly III frontend HTTPS asset scheme forcing (`APP_URL=https://...`, `TRUSTED_PROXIES=*`, `FORCE_SCHEME_HTTPS=true`, Caddy `header_up X-Forwarded-Proto https`) for OAuth and chart endpoints.
 - [ ] Verify financial data import/restore in Firefly III.
 - [ ] Decommission legacy `ezBookKeeping` container and update Caddy `svc:ezbk` route directly to Firefly III.
+- [x] Decommission Piper, Whisper, and Ollama and deploy Local AI stack (LM Studio + Open WebUI).
 
 ### CI/CD, Backups, & Security
 - [x] Restrict `tag:ci` SSH access in Tailscale ACLs to non-root `adminUser`.
@@ -120,3 +126,6 @@ layers/
 - **Least Privilege SSH Access**: Restricting CI runners (`tag:ci`) to non-root users prevents potential repository compromise from resulting in full hypervisor takeover.
 - **Keyless SSH via Tailscale**: By passing empty strings as SSH keys in CI, the Terraform Docker provider falls back to using Tailscale's cryptographic machine identity for authorization, keeping zero static keys in GitHub Secrets.
 - **Native HCL Imports**: Using the Terraform 1.5+ `import {}` block natively handles state import logic (e.g. for `tailscale_acl`) inside CI workflows, preventing the need for ad-hoc CLI commands handling remote state authentication.
+- **Reverse Proxy Scheme Forwarding (`X-Forwarded-Proto`)**: When Caddy sits behind a TLS-terminating ingress gateway (Tailscale Serve) and listens locally on HTTP port 80, Caddy's default `reverse_proxy` behavior sets `X-Forwarded-Proto: {http.request.scheme}` (evaluating to `http`). For HTTPS-sensitive web applications like Firefly III (Laravel), explicitly passing `header_up X-Forwarded-Proto https` in `caddyfile` guarantees that downstream applications evaluate `$request->secure()` as true and output matching HTTPS base URIs.
+- **Hybrid Native Daemon & Containerized WebUI Pattern**: Running heavy compute workloads like LM Studio natively on the host OS via `systemd` bypasses container virtualization overhead and complex GPU/AVX device passthrough, while `host.docker.internal` allows lightweight auxiliary web frontends (Open WebUI) to interface seamlessly with the host-bound inference engine over the Docker bridge gateway.
+

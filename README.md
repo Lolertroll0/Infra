@@ -9,7 +9,7 @@ This repository contains the Terraform configuration for a professional-grade, d
 The project is structured around a **Multi-State Layered Architecture** managed via **HCP Terraform (Terraform Cloud)**:
 
 - **Layer 1 (`layers/1- Infra`)**: Manages physical & virtual host infrastructure (Proxmox VMs, Cloud-Init, static networking, Tailscale mesh ACL policies, and initial node setup).
-- **Layer 2 (`layers/2 - Services`)**: Manages application runtime containers (Caddy, Vaultwarden, Uptime Kuma, Firefly III, ezBookKeeping, Duplicati, Ollama, Whisper, Piper) using keyless SSH Docker providers.
+- **Layer 2 (`layers/2 - Services`)**: Manages application runtime containers (Caddy, Vaultwarden, Uptime Kuma, Firefly III, ezBookKeeping, Duplicati, Open WebUI) using keyless SSH Docker providers.
 
 ---
 
@@ -19,7 +19,8 @@ The project is structured around a **Multi-State Layered Architecture** managed 
 * **Networking & Zero Trust:** Tailscale (MagicDNS, ACLs, Tailscale SSH), Caddy (Reverse Proxy)
 * **State Management:** HCP Terraform (Workspaces: `infrastructure-layer` & `services-layer`)
 * **CI/CD & Automation:** GitHub Actions, Bash Scripts
-* **Core Stack:** Home Assistant OS, Firefly III, MariaDB, Vaultwarden, Uptime Kuma, Duplicati, Ollama, Whisper, Piper, ezBookKeeping
+* **Core Stack:** Home Assistant OS, Firefly III, MariaDB, Vaultwarden, Uptime Kuma, Duplicati, LM Studio, Open WebUI, ezBookKeeping
+
 
 ---
 

@@ -135,9 +135,8 @@ resource "null_resource" "setup_voicePipelineEnvironment" {
       "sudo usermod -aG docker ${var.adminUser}",
       "if command -v tailscale >/dev/null 2>&1; then echo \"Tailscale is already installed.\"; else curl -fsSL https://tailscale.com/install.sh | sudo sh; fi",
       "if ! sudo tailscale status >/dev/null 2>&1; then sudo tailscale up --authkey=${var.tailscaleVoiceAuthKey} --ssh --accept-risk=lose-ssh; fi",
-      "mkdir -p ${local.data_dir}/whisper/",
-      "mkdir -p ${local.data_dir}/piper/",
-      "mkdir -p ${local.data_dir}/ollama/"
+      "mkdir -p ${local.data_dir}/lmstudio/",
+      "mkdir -p ${local.data_dir}/open-webui/"
     ]
     connection {
       type        = "ssh"
@@ -148,6 +147,52 @@ resource "null_resource" "setup_voicePipelineEnvironment" {
     }
   }
 }
+
+resource "null_resource" "setup_lmstudioService" {
+  triggers = {
+    host_ip      = var.voicePipeline
+    adminUser    = var.adminUser
+    service_hash = md5(templatefile("${path.module}/../../scripts/lmstudio.service.tftpl", { adminUser = var.adminUser }))
+  }
+
+  depends_on = [
+    null_resource.setup_voicePipelineEnvironment
+  ]
+
+  provisioner "file" {
+    content     = templatefile("${path.module}/../../scripts/lmstudio.service.tftpl", { adminUser = var.adminUser })
+    destination = "/tmp/lmstudio.service"
+
+    connection {
+      type        = "ssh"
+      host        = var.voicePipeline
+      user        = var.adminUser
+      private_key = var.voiceKey != "" ? file(var.voiceKey) : null
+      timeout     = "5m"
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "if ! command -v lms >/dev/null 2>&1 && [ ! -f /home/${var.adminUser}/.cache/lm-studio/bin/lms ]; then curl -fsSL https://lmstudio.ai/install.sh | sh; fi",
+      "if [ -f /home/${var.adminUser}/.cache/lm-studio/bin/lms ]; then sudo ln -sf /home/${var.adminUser}/.cache/lm-studio/bin/lms /usr/local/bin/lms; fi",
+      "export PATH=\"$PATH:/usr/local/bin:/home/${var.adminUser}/.cache/lm-studio/bin:/home/${var.adminUser}/.local/bin\"",
+      "/usr/local/bin/lms bootstrap || /home/${var.adminUser}/.cache/lm-studio/bin/lms bootstrap || true",
+      "sudo mv /tmp/lmstudio.service /etc/systemd/system/lmstudio.service",
+      "sudo systemctl daemon-reload",
+      "sudo systemctl enable --now lmstudio.service"
+    ]
+
+    connection {
+      type        = "ssh"
+      host        = var.voicePipeline
+      user        = var.adminUser
+      private_key = var.voiceKey != "" ? file(var.voiceKey) : null
+      timeout     = "10m"
+    }
+  }
+}
+
 
 # Proxmox VM
 resource "proxmox_vm_qemu" "HomeAssistantOS" {

@@ -23,7 +23,10 @@ SERVICES=(
     "svc:homeassistant"
     "svc:ezbk"
     "svc:ff3"
+    "svc:lmstudio"
+    "svc:chat"
 )
+
 
 echo "==> [Tailscale Serve] Provisioning Virtual Services to Caddy Proxy (127.0.0.1:80)..."
 for svc in "${SERVICES[@]}"; do

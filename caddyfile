@@ -21,5 +21,16 @@ http://ezbk.${tailnet} {
 }
 
 http://ff3.${tailnet} {
-	reverse_proxy ezbookkeeping.${tailnet}:8081
+	reverse_proxy ezbookkeeping.${tailnet}:8081 {
+		header_up X-Forwarded-Proto https
+	}
 }
+
+http://chat.${tailnet} {
+	reverse_proxy voice-pipeline.${tailnet}:8080
+}
+
+http://lmstudio.${tailnet} {
+	reverse_proxy voice-pipeline.${tailnet}:1234
+}
+

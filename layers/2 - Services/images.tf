@@ -12,21 +12,12 @@ resource "docker_image" "vaultWarden" {
   name     = "vaultwarden/server:1.37.1"
 }
 
-#Voice Pipeline Resources
-# Note: thelocallab/ollama-openwebui is an unofficial combined image. 
-# Consider migrating to official separate containers (ollama/ollama and open-webui/open-webui) to enable strict version pinning.
-resource "docker_image" "ollama" {
+# AI Node Resources
+resource "docker_image" "open_webui" {
   provider = docker.voicePipeline
-  name     = "thelocallab/ollama-openwebui:latest"
+  name     = "ghcr.io/open-webui/open-webui:v0.5.20"
 }
-resource "docker_image" "whisper" {
-  provider = docker.voicePipeline
-  name     = "rhasspy/wyoming-whisper:3.1.0"
-}
-resource "docker_image" "piper" {
-  provider = docker.voicePipeline
-  name     = "rhasspy/wyoming-piper:2.2.2"
-}
+
 
 # Main Server Resources
 resource "docker_image" "ezbookkeeping" {
