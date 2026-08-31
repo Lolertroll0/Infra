@@ -1,0 +1,86 @@
+#!/bin/bash
+set -euo pipefail
+
+ADMIN_USER="${adminUser}"
+HOME_DIR="/home/$${ADMIN_USER}"
+NPROC=$(nproc)
+
+echo "==> [LM Studio Provisioner] Starting setup on host (Detected $${NPROC} CPU cores)..."
+
+# 1. Install LM Studio CLI if not present
+if ! command -v lms >/dev/null 2>&1 && [ ! -f "$${HOME_DIR}/.lmstudio/bin/lms" ] && [ ! -f "$${HOME_DIR}/.cache/lm-studio/bin/lms" ]; then
+    echo "==> [LM Studio] Installing official LM Studio CLI..."
+    curl -fsSL https://lmstudio.ai/install.sh | sh
+fi
+
+# 2. Symlink binary to /usr/local/bin
+if [ -f "$${HOME_DIR}/.lmstudio/bin/lms" ]; then
+    sudo ln -sf "$${HOME_DIR}/.lmstudio/bin/lms" /usr/local/bin/lms
+elif [ -f "$${HOME_DIR}/.cache/lm-studio/bin/lms" ]; then
+    sudo ln -sf "$${HOME_DIR}/.cache/lm-studio/bin/lms" /usr/local/bin/lms
+fi
+
+export PATH="$PATH:/usr/local/bin:$${HOME_DIR}/.lmstudio/bin:$${HOME_DIR}/.cache/lm-studio/bin:$${HOME_DIR}/.local/bin"
+
+# 3. Bootstrap backends
+echo "==> [LM Studio] Running bootstrap..."
+lms bootstrap || true
+
+# 4. Multi-core CPU Thread Optimizer (Wrapper Injection)
+echo "==> [LM Studio] Injecting multi-core CPU thread optimizer ($${NPROC} threads)..."
+for backend_dir in "$${HOME_DIR}"/.lmstudio/extensions/backends/llama.cpp-*; do
+    if [ -d "$backend_dir" ] && [ -f "$backend_dir/llama-server" ]; then
+        if [ ! -f "$backend_dir/llama-server.bin" ]; then
+            cp "$backend_dir/llama-server" "$backend_dir/llama-server.bin"
+        fi
+        cat << 'EOF' > "$backend_dir/llama-server"
+#!/bin/bash
+DIR="$(cd "$(dirname "$${BASH_SOURCE[0]}")" && pwd)"
+NUM_CORES=$(nproc)
+export OMP_NUM_THREADS=$NUM_CORES
+export LLAMA_ARG_THREADS=$NUM_CORES
+
+ARGS=()
+PREV=""
+for a in "$@"; do
+    if [ "$PREV" = "--threads" ]; then
+        ARGS+=("$NUM_CORES")
+        PREV=""
+    else
+        if [ "$a" = "--threads" ]; then
+            PREV="--threads"
+            ARGS+=("$a")
+        else
+            ARGS+=("$a")
+        fi
+    fi
+done
+
+exec "$DIR/llama-server.bin" "$${ARGS[@]}"
+EOF
+        chmod +x "$backend_dir/llama-server"
+        echo "    --> Patched $backend_dir/llama-server to utilize $${NPROC} CPU cores."
+    fi
+done
+
+# 5. Pre-download Qwen 2.5 7B model if not present
+MODEL_DIR="$${HOME_DIR}/.lmstudio/models/bartowski/Qwen2.5-7B-Instruct-GGUF"
+MODEL_FILE="$MODEL_DIR/Qwen2.5-7B-Instruct-Q4_K_M.gguf"
+if [ ! -f "$MODEL_FILE" ]; then
+    echo "==> [LM Studio] Downloading Qwen2.5-7B-Instruct-Q4_K_M.gguf (~4.68GB)..."
+    mkdir -p "$MODEL_DIR"
+    wget -c -O "$MODEL_FILE" "https://huggingface.co/bartowski/Qwen2.5-7B-Instruct-GGUF/resolve/main/Qwen2.5-7B-Instruct-Q4_K_M.gguf"
+fi
+
+# 6. Install & start systemd service
+echo "==> [LM Studio] Configuring systemd service..."
+sudo mv /tmp/lmstudio.service /etc/systemd/system/lmstudio.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now lmstudio.service
+
+# 7. Pre-load Qwen model with 8k context
+echo "==> [LM Studio] Loading Qwen 2.5 7B into server with 8192 context length..."
+sleep 3
+lms load qwen2.5-7b-instruct --context-length 8192 -y || true
+
+echo "==> [LM Studio] Provisioning & CPU Optimization Complete! ✅"
