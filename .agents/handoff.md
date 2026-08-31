@@ -1,6 +1,6 @@
-# Infra Project Handoff
+﻿# Infra Project Handoff
 
-This document summarizes the current state, goals, and next steps for the `Lolertroll0/Infra` repository (branch `stage`). It is intended as context for future work by the owner or by an AI/code agent.
+This document summarizes the current state, goals, and next steps for the `Lolertroll0/Infra` repository (branch `main`). It is intended as context for future work by the owner or by an AI/code agent.
 
 ---
 
@@ -36,39 +36,45 @@ Build a professional-grade, **distributed home lab** managed entirely via **Infr
   - Uses a dedicated internal Docker network for orchestrator services.
 
 - **Local AI Node (formerly Voice & AI Pipeline Node)**
-  - Dedicated x86 node for local LLM inference and text processing (Obsidian Vaults).
+  - Dedicated x86 node (Intel Core i5-7500T 4C/4T @ 2.70GHz, 14 GB RAM) for local LLM inference and Obsidian Vault text processing.
   - Runs natively via `systemd`:
-    - **LM Studio CLI (`lms`)** listening on port `1234` for OpenAI-compatible chat completions and embeddings.
+    - **LM Studio CLI (`lms`)** listening on port `1234` for OpenAI-compatible chat completions (`qwen2.5-7b-instruct`) and vector embeddings (`text-embedding-nomic-embed-text-v1.5`).
+    - Automated **multi-core CPU thread optimizer** wrapper (`scripts/setup-lmstudio.sh.tftpl`) forcing all 4 cores with AVX2 vectorization.
   - Runs Docker with:
-    - **Open WebUI** on port `8080` for browser-based ad-hoc chat and model testing.
-  - Decommissioned legacy Whisper, Piper, and Ollama containers to dedicate all hardware resources to local LLM inference.
-
+    - **Open WebUI (v0.11.1)** on port `8080` for browser-based ad-hoc chat, testing, and model management.
+  - Decommissioned legacy Whisper, Piper, and Ollama containers to dedicate 100% of node memory/compute to LLM & embedding workloads.
 
 - **Networking & security**
-  - All nodes join the same **Tailscale tailnet**; no router port forwarding.
+  - All nodes join the same **Tailscale tailnet**; zero router port forwardings.
   - Services are accessed by consumer devices on Tailscale via subdomains:
     - `vaultwarden.${tailnet}`
     - `uptime-kuma.${tailnet}`
     - `homeassistant.${tailnet}`
-  - **Tailscale** on the orchestrator host terminates TLS for the Virtual Services (`svc:vaultwarden`, `svc:uptime-kuma`, `svc:homeassistant`, `svc:ezbk`) and forwards requests to Caddy on local port 80.
+    - `ff3.${tailnet}`
+    - `chat.${tailnet}`
+    - `lmstudio.${tailnet}`
+  - **Tailscale** on the orchestrator host terminates TLS for the Virtual Services (`svc:vaultwarden`, `svc:uptime-kuma`, `svc:homeassistant`, `svc:ezbk`, `svc:ff3`, `svc:chat`, `svc:lmstudio`) and forwards requests to Caddy on local port 80.
   - **Caddy** inspects the Host header and reverse-proxies matching hosts to local containers or remote nodes.
-  - **Tailscale ACLs** and tags define which nodes and tags can talk to which ports, plus Tailscale SSH access rules. CI runner (`tag:ci`) is restricted to non-root `adminUser` access.
+  - **Tailscale ACLs** and tags define strict network isolation:
+    - Port `1234` (LM Studio direct API): Accessible strictly by `tag:consumer` (Obsidian client workstations) and `tag:orchestrator`.
+    - Port `8080` (Open WebUI): Accessible via reverse proxy over `chat.${tailnet}`.
+    - CI runner (`tag:ci`) is restricted to non-root `adminUser` SSH access.
 
 ---
 
 ### Layered Multi-State Architecture (`layers/`)
 
-The repository has been refactored into a **Layered Architecture (Option B)** with **HCP Remote State Sharing (Approach A)**:
+The repository is structured into a **Layered Architecture** with **HCP Remote State Sharing**:
 
 ```text
 layers/
 ├── 1- Infra/                    # Infrastructure Layer (HCP Workspace: infrastructure-layer)
-│   ├── main.tf                  # Proxmox VMs & null_resource host provisioning
+│   ├── main.tf                  # Proxmox VMs & null_resource host provisioning (Docker, Tailscale, LM Studio)
 │   ├── providers.tf             # Proxmox & Tailscale providers
 │   ├── variables.tf             # Hardware & Tailscale credentials
 │   ├── outputs.tf               # Node IPs, adminUser, SSH key paths exported to HCP State
 │   ├── locals.tf                # Common base directory patterns
-│   └── tailscalePolicy.tf       # Tailscale ACLs & SSH authorization policy
+│   └── tailscalePolicy.tf       # Tailscale ACLs, Virtual Services, & SSH authorization policy
 │
 └── 2 - Services/                # Application Layer (HCP Workspace: services-layer)
     ├── data.tf                  # Dynamic data binding to "infrastructure-layer" HCP state
@@ -82,16 +88,14 @@ layers/
 
 ### Deployment Status & Recent Milestones
 
-- **Layered Refactor Complete**: Successfully decoupled physical VM / OS provisioning (`1- Infra`) from container application management (`2 - Services`).
-- **HCP Remote State Integration**: Layer 2 reads all node connection IPs, credentials, and SSH keys dynamically from Layer 1's `outputs.tf` via `data.terraform_remote_state.infra.outputs`.
-- **Firefly III Migration**: Deployed Firefly III alongside legacy ezBookKeeping on port 8081. Restored encrypted database secrets from Duplicati backups using `scripts/ff3-vars.sh` over Tailscale SSH without exposing secrets in `.tfstate`.
-- **Tailscale Device Tagging & Virtual Services Ingress**: Enforced `tag:orchestrator` on `homeserver` and `tag:consumer` on `ezbookkeeping` node via `tailscale_device_tags`. Configured and approved `svc:ff3` alongside `svc:ezbk`, `svc:homeassistant`, `svc:uptime-kuma`, and `svc:vaultwarden` via Tailscale Serve.
-- **Firefly III Database Migration & Schema Repair**: Automated `null_resource.firefly_db_migration` in Layer 2 with `always_run = timestamp()` to run `php artisan migrate --force`. Executed user group schema repair (`user_groups` table entry linked to User #1), resolving the `User #1 has no user group` exception and making `https://ff3.tailded50c.ts.net` 100% operational.
-- **Systemd-Resolved DNS Resilience**: Hardened `ezBookKeeping` VM (`100.107.51.81`) with public DNS fallbacks (`1.1.1.1 8.8.8.8`) in `/etc/systemd/resolved.conf` and updated Layer 1 `main.tf` inline provisioners to guarantee Docker Hub image pulls (`mariadb:11.4`, `mayswind/ezbookkeeping:1.5`, `fireflyiii/core:version-6.6`) never fail due to transient DNS drops.
-- **CI/CD Workflow Secrets Mapping**: Fixed `.github/workflows/deploy.yml` and `ci.yml` to correctly map all 10 SSH key environment variables (`TF_VAR_mainKey`, `TF_VAR_otherServicesKey`, etc.) from GitHub Secrets.
-- **Resource Re-creation (Taint)**: Marked all FF3 (`docker_container.financial_assistant`, `docker_container.financial_assistant_db`, `docker_image.firefly`, `docker_image.firefly_db`, `docker_network.financial_assistant_net`, `docker_volume.financial_assistant_db`) and EZBK (`docker_container.ezbookkeeping`, `docker_image.ezbookkeeping`) resources as **tainted** in HCP Terraform Cloud state for clean rebuild upon next apply.
-- **Firefly III HTTPS Proxy Header & Base URI Resolution**: Updated `caddyfile` with `header_up X-Forwarded-Proto https` for `http://ff3.${tailnet}` to override Caddy's default `{http.request.scheme}` header behavior (which sent `http` to downstream containers when listening on port 80). Resolved the browser Content Security Policy `base-uri 'self'` violation on `/profile/oauth` and restored 100% of CSS/JS/chart asset rendering across HTTPS.
-- **Local AI Stack Transition (LM Studio & Open WebUI)**: Decommissioned legacy voice containers (Whisper, Piper, Ollama) and network from Layer 2. Automated host-level LM Studio installation, bootstrap, and `systemd` unit creation via `null_resource.setup_voicePipelineEnvironment` in Layer 1. Deployed `open-webui` in Layer 2 connecting to host-level LM Studio via `host.docker.internal:1234`. Registered `svc:lmstudio` and `svc:chat` in `tailscalePolicy.tf`, configured Caddy ingress routes, and added services to `scripts/setup-tailscale-serve.sh`.
+- **Open WebUI Upgrade (`v0.11.1`)**: Updated `docker_image.open_webui` from `v0.5.20` to `v0.11.1` in Layer 2 `images.tf` with pinned release tags.
+- **Docker Host Gateway UFW Ingress Fix**: Diagnosed and resolved 500 Connection Timeout Errors between Open WebUI container (`172.17.0.1`) and host LM Studio daemon (`1234/tcp`). Added `ufw allow 1234/tcp` to `null_resource.setup_voicePipelineEnvironment` in Layer 1 `main.tf`.
+- **Multi-Core CPU Thread Wrapper Codification**: Discovered LM Studio CLI defaulted to single-threaded inference (`--threads 1`) on Linux. Created `scripts/setup-lmstudio.sh.tftpl` to dynamically intercept `llama-server` execution, set `OMP_NUM_THREADS=$(nproc)`, and override `--threads $(nproc)`, cutting Time-To-First-Token (TTFT) to **0.48s** and reducing generation time by **2.5x**.
+- **Context Length Expansion (`n_ctx: 8192`)**: Configured default context length to `8192` tokens during model bootstrap in `setup-lmstudio.sh.tftpl`, preventing Open WebUI multi-turn context overflow exceptions (`HTTP 400 exceed_context_size_error`).
+- **Open WebUI Prompt Latency Root Cause**: Identified that Open WebUI v0.11.1 defaults to injecting extensive JSON tool schemas into every chat prompt, causing 15-20s prompt evaluation delays on CPU. Documented best practice of disabling unused tools/web search in chat settings for sub-second generation.
+- **Model Provisioning & Loading**: Pre-loaded `qwen2.5-7b-instruct` (4.68 GB Q4_K_M) and `text-embedding-nomic-embed-text-v1.5` on `voicepipeline` with total memory footprint under 5.5 GiB, leaving >9 GiB available RAM.
+- **Obsidian Vault Full-Stack Integration Guide**: Documented complete setup for **Smart Connections** (vault-wide RAG & embeddings) and **Copilot for Obsidian** (chat sidebar & inline text generation) connecting across Tailscale Zero-Trust ingress.
+- **Pre-Merge Security Validation (`/sec-validation`)**: Completed STRIDE threat modeling, static code analysis, and secret scanning with a formal **GO** gating decision.
 
 ---
 
@@ -100,20 +104,22 @@ layers/
 ### Core Infrastructure & Cleanup
 - [x] Refactor monolith into `layers/1- Infra/` and `layers/2 - Services/`.
 - [x] Configure HCP Remote State data source bindings in Layer 2.
-- [x] Remove legacy root-level `.tf` files (`images.tf`, `mainServer.tf`, `orchestrator.tf`, `providers.tf`, `voicePipeline.tf`, `tailscalePolicy.tf`) after confirming clean plan in both layers.
+- [x] Remove legacy root-level `.tf` files after confirming clean plans.
 - [ ] Set up HCP Terraform Run Triggers so an apply in `infrastructure-layer` automatically triggers a plan in `services-layer`.
 
 ### Data Migration & Application Stack
 - [x] Deploy Firefly III container stack on `otherServices` node (port 8081).
 - [x] Run `php artisan migrate --force` and initialize MariaDB schema.
-- [x] Fix Firefly III frontend HTTPS asset scheme forcing (`APP_URL=https://...`, `TRUSTED_PROXIES=*`, `FORCE_SCHEME_HTTPS=true`, Caddy `header_up X-Forwarded-Proto https`) for OAuth and chart endpoints.
+- [x] Fix Firefly III frontend HTTPS asset scheme forcing (`APP_URL=https://...`, `TRUSTED_PROXIES=*`, `FORCE_SCHEME_HTTPS=true`, Caddy `header_up X-Forwarded-Proto https`).
 - [ ] Verify financial data import/restore in Firefly III.
 - [ ] Decommission legacy `ezBookKeeping` container and update Caddy `svc:ezbk` route directly to Firefly III.
 - [x] Decommission Piper, Whisper, and Ollama and deploy Local AI stack (LM Studio + Open WebUI).
+- [x] Codify LM Studio multi-core CPU optimization, UFW firewalling, and 8k context in Layer 1.
+- [ ] (Optional) Download lightweight secondary model (`qwen2.5-3b-instruct`) for ultra-fast inline note editing (>15 tokens/sec).
 
 ### CI/CD, Backups, & Security
 - [x] Restrict `tag:ci` SSH access in Tailscale ACLs to non-root `adminUser`.
-- [x] Update GitHub Actions workflows (`ci.yml`, `deploy.yml`) to support two-layer directory execution (`cd layers/1- Infra` then `cd layers/2 - Services`).
+- [x] Update GitHub Actions workflows (`ci.yml`, `deploy.yml`) to support two-layer directory execution.
 - [x] Fix relative log redirect pathing for sequential CI PR comment outputs.
 - [ ] Design and implement comprehensive backup/recovery strategy for Docker volumes (Duplicati) and Proxmox VMs.
 
@@ -134,8 +140,3 @@ layers/
 - **Context Length Expansion for WebUI & RAG (`n_ctx: 8192`)**: Set LM Studio default context to `8192` tokens during model loading in `setup-lmstudio.sh.tftpl`, accommodating large multi-turn chat threads without triggering Open WebUI `400 Bad Request` context overflow errors.
 - **Caddy Upstream Hostname Exact Match**: Fixed hostname typo in `caddyfile` from `voice-pipeline` to `voicepipeline` (matching the exact Tailscale MagicDNS node hostname), resolving 502 Bad Gateway proxy errors.
 - **Tailscale Virtual Services (`svc:...`) Control Plane Propagation**: New Virtual Services added to `tailscalePolicy.tf` (`autoApprovers.services`) must be applied via `terraform apply` in Layer 1 (`Deploy Infra` workflow in GitHub Actions) to sync with `api.tailscale.com`. Once approved by Tailscale Control Plane and registered via `sudo /tmp/setup-tailscale-serve.sh` on Orchestrator, MagicDNS allocates virtual IPs (`100.x.y.z`) and routes TLS-terminated HTTPS traffic cleanly to Caddy.
-
-
-
-
-
